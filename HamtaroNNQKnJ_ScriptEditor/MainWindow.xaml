@@ -1,0 +1,54 @@
+﻿<Window x:Class="HamtaroNNQKnJ_ScriptEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HamtaroNNQKnJ_ScriptEditor"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <!--<Menu x:Name="menu" Height="450" VerticalAlignment="Top">
+            <MenuItem x:Name="fileMenuItem" Header="File">
+                <MenuItem x:Name="fileMenuOpen" Header="Open Message File" Click="FileMenuOpen_Click" />
+                <MenuItem x:Name="fileMenuSave" Header="Save Message File" Click="FileMenuSave_Click" />
+                <MenuItem x:Name="fileMenuExtract" Header="Extract Text from Message File" Click="FileMenuExtract_Click" />
+            </MenuItem>
+        </Menu>-->
+        <TabControl>
+            <TabItem Header="Messages">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="99*"/>
+                        <ColumnDefinition Width="695*"/>
+                    </Grid.ColumnDefinitions>
+                    <ToolBar x:Name="scriptToolBar" HorizontalAlignment="Left" Height="30" VerticalAlignment="Top" Width="794" Grid.ColumnSpan="2">
+                        <Button x:Name="openMessagesFileButton" Content="Open" HorizontalAlignment="Left" Click="OpenMessagesButton_Click" />
+                        <Button x:Name="saveMessagesFileButton" Content="Save" HorizontalAlignment="Left" Click="SaveMessagesButton_Click" />
+                        <Button x:Name="extractMessagesFileButton" Content="Extract" HorizontalAlignment="Left" Click="ExtractMessagesButton_Click" />
+                    </ToolBar>
+                    <ListBox x:Name="messageListBox" Margin="0,30,410,0" SelectionChanged="MessageListBox_SelectionChanged" Grid.ColumnSpan="2" />
+                    <StackPanel x:Name="editStackPanel" Margin="290,30,0,0" Grid.Column="1" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="Directory">
+                <Grid>
+                    <ToolBarTray Orientation="Horizontal">
+                        <ToolBar x:Name="directoryToolBar">
+                            <Button x:Name="openDirectoryFileButton" Content="Open" HorizontalAlignment="Left" />
+                            <Button x:Name="saveDirectoryFileButton" Content="Save" HorizontalAlignment="Left" />
+                            <Button x:Name="extractDirectoryFileButton" Content="Extract All Files" HorizontalAlignment="Left" />
+                        </ToolBar>
+                        <ToolBar x:Name="directorySelectToolBar" />
+                    </ToolBarTray>
+                    <ListBox x:Name="directoryListBox" Margin="0,30,0,0" />
+                </Grid>
+            </TabItem>
+            <TabItem Header="Hex Editor">
+                <Grid>
+                    <TextBox x:Name="hexEditorTextBox" Margin="0,30,410,0" TextChanged="HexEditorTextBox_TextChanged" />
+                    <TextBlock x:Name="hexPreviewTextBlock" Margin="389,30,0,0" TextWrapping="Wrap" />
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
