@@ -122,10 +122,20 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 // Unknown what this does -- seems a bit like line start?
                 return ("<0x0E>", 2);
             }
+            else if (nextTwoBytes[0] == 0x0F && nextTwoBytes[1] == 0x01)
+            {
+                // Unknown what this does -- seems a bit like line start?
+                return ("<0x0F01>", 3);
+            }
+            else if (nextTwoBytes[0] == 0x0F && nextTwoBytes[1] == 0x04)
+            {
+                // Unknown what this does -- seems a bit like line start?
+                return ("<0x0F04>", 3);
+            }
             else if (nextTwoBytes[0] == 0x0F && nextTwoBytes[1] == 0x05)
             {
                 // Unknown what this does -- seems a bit like line start?
-                return ("<0x0F>", 3);
+                return ("<0x0F05>", 3);
             }
             else if (nextTwoBytes[0] == 0x10 && nextTwoBytes[1] == 0x03)
             {
@@ -178,7 +188,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
         }
 
-        public void WriteToFile(string file)
+        public byte[] GetBytes()
         {
             RecalculatePointers();
 
@@ -194,7 +204,12 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
             data.Add(0x00); // end file
 
-            File.WriteAllBytes(file, data.ToArray());
+            return data.ToArray();
+        }
+
+        public void WriteToFile(string file)
+        {
+            File.WriteAllBytes(file, GetBytes());
         }
 
         public void RecalculatePointers()
@@ -463,28 +478,30 @@ namespace HamtaroNNQKnJ_ScriptEditor
             { 0xF8, "ヅ" },
             { 0xF9, "テ" },
             { 0xFA, "デ" },
-            { 0xFB, "⬆" },
+            { 0xFB, "<FB>" },
+            { 0xFC, "<FC>" },
+            { 0xFD, "<FD>" }
             #endregion
         };
         public static Dictionary<byte, string> FEByteToSpecialCharMap = new Dictionary<byte, string>
         {
-            { 0x00, "⬆" },
-            { 0x01, "➡" },
-            { 0x02, "⬇" },
-            { 0x03, "⬅" },
-            { 0x04, "🅰" },
-            { 0x05, "🅱" },
+            { 0x00, "<up>" },
+            { 0x01, "<right>" },
+            { 0x02, "<down>" },
+            { 0x03, "<left>" },
+            { 0x04, "<A>" },
+            { 0x05, "<B>" },
             { 0x06, "<X>" },
             { 0x07, "<Y>" },
             { 0x08, "<R>" },
             { 0x09, "<L>" },
-            { 0x0A, "♥" },
-            { 0x0B, "🎵" },
-            { 0x0C, "⭐" },
+            { 0x0A, "<heart>" },
+            { 0x0B, "<music>" },
+            { 0x0C, "<star>" },
             { 0x0D, "太" },
             { 0x0E, "郎" },
-            { 0x0F, "⭕" },
-            { 0x10, "❌" },
+            { 0x0F, "<circle>" },
+            { 0x10, "<cross>" },
         };
     }
 
@@ -529,7 +546,13 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         case "<0x0E":
                             bytes.AddRange(new byte[] { 0xFF, 0x0E });
                             break;
-                        case "<0x0F":
+                        case "<0x0F01":
+                            bytes.AddRange(new byte[] { 0xFF, 0x0F, 0x01 });
+                            break;
+                        case "<0x0F04":
+                            bytes.AddRange(new byte[] { 0xFF, 0x0F, 0x04 });
+                            break;
+                        case "<0x0F05":
                             bytes.AddRange(new byte[] { 0xFF, 0x0F, 0x05 });
                             break;
                         case "<0x1003":
@@ -544,6 +567,15 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         case "<0x1101":
                             bytes.AddRange(new byte[] { 0xFF, 0x11, 0x01 });
                             break;
+                        case "<0xFB":
+                            bytes.AddRange(new byte[] { 0xFB });
+                            break;
+                        case "<0xFC":
+                            bytes.AddRange(new byte[] { 0xFC });
+                            break;
+                        case "<0xFD":
+                            bytes.AddRange(new byte[] { 0xFD });
+                            break;
                         case "<black":
                             bytes.AddRange(new byte[] { 0xFF, 0x20 });
                             break;
@@ -555,6 +587,24 @@ namespace HamtaroNNQKnJ_ScriptEditor
                             break;
                         case "<longtab":
                             bytes.AddRange(new byte[] { 0xFF, 0x36 });
+                            break;
+                        case "<up":
+                            bytes.AddRange(new byte[] { 0xFE, 0x00 });
+                            break;
+                        case "<right":
+                            bytes.AddRange(new byte[] { 0xFE, 0x01 });
+                            break;
+                        case "<down":
+                            bytes.AddRange(new byte[] { 0xFE, 0x02 });
+                            break;
+                        case "<left":
+                            bytes.AddRange(new byte[] { 0xFE, 0x03 });
+                            break;
+                        case "<A":
+                            bytes.AddRange(new byte[] { 0xFE, 0x04 });
+                            break;
+                        case "<B":
+                            bytes.AddRange(new byte[] { 0xFE, 0x05 });
                             break;
                         case "<X":
                             bytes.AddRange(new byte[] { 0xFE, 0x06 });
@@ -568,6 +618,21 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         case "<L":
                             bytes.AddRange(new byte[] { 0xFE, 0x09 });
                             break;
+                        case "<heart":
+                            bytes.AddRange(new byte[] { 0xFE, 0x0A });
+                            break;
+                        case "<music":
+                            bytes.AddRange(new byte[] { 0xFE, 0x0B });
+                            break;
+                        case "<star":
+                            bytes.AddRange(new byte[] { 0xFE, 0x0C });
+                            break;
+                        case "<circle":
+                            bytes.AddRange(new byte[] { 0xFE, 0x0F });
+                            break;
+                        case "<cross":
+                            bytes.AddRange(new byte[] { 0xFE, 0x10 });
+                            break;
                     }
 
                     i += op.Length;
@@ -579,6 +644,18 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 else if (Text[i] == '\t')
                 {
                     bytes.AddRange(new byte[] { 0xFF, 0x35 });
+                }
+                else if (Text[i] == '太')
+                {
+                    bytes.AddRange(new byte[] { 0xFE, 0x0D });
+                }
+                else if (Text[i] == '郎')
+                {
+                    bytes.AddRange(new byte[] { 0xFE, 0x0E });
+                }
+                else if (ScriptFile.FEByteToSpecialCharMap.Values.Contains(Text[i].ToString()))
+                {
+                    bytes.Add(ScriptFile.FEByteToSpecialCharMap.First(c => c.Value == Text[i].ToString()).Key);
                 }
                 else
                 {
