@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using FolderBrowserEx;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -14,7 +15,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace HamtaroNNQKnJ_ScriptEditor
 {
@@ -23,7 +23,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
     /// </summary>
     public partial class MainWindow : Window
     {
-        public ScriptFile Script { get; set; }
+        private ScriptFile _scriptFile { get; set; }
+        private DirectoryFile _directoryFile { get; set; }
 
         public MainWindow()
         {
@@ -38,8 +39,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
             };
             if (openFileDialog.ShowDialog() == true)
             {
-                Script = ScriptFile.ParseFromFile(openFileDialog.FileName);
-                messageListBox.ItemsSource = Script.Messages;
+                _scriptFile = ScriptFile.ParseFromFile(openFileDialog.FileName);
+                messageListBox.ItemsSource = _scriptFile.Messages;
             }
         }
 
@@ -51,7 +52,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             };
             if (saveFileDialog.ShowDialog() == true)
             {
-                Script.WriteToFile(saveFileDialog.FileName);
+                _scriptFile.WriteToFile(saveFileDialog.FileName);
             }
         }
 
@@ -63,7 +64,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             };
             if (saveFileDialog.ShowDialog() == true)
             {
-                File.WriteAllLines(saveFileDialog.FileName, Script.Messages.Select(m => $"{m.Text}\n"));
+                File.WriteAllLines(saveFileDialog.FileName, _scriptFile.Messages.Select(m => $"{m.Text}\n"));
             }
         }
 
@@ -123,7 +124,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         }
                         else
                         {
-                            hexPreviewTextBlock.Text += ScriptFile.ByteToCharMap[currentByte];
+                            ScriptFile.ByteToCharMap.TryGetValue(currentByte, out string mappedChar);
+                            hexPreviewTextBlock.Text += mappedChar;
                         }
                     }
                 }
@@ -131,6 +133,80 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 {
                     // do nothing
                 }
+            }
+        }
+
+        private void OpenDirectoryFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "DAT file|*.dat"
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                _directoryFile = DirectoryFile.ParseFromFile(openFileDialog.FileName);
+                directoryListBox.ItemsSource = _directoryFile.GetAllDirectoryItems();
+            }
+        }
+
+        private void ExtractDirectoryFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog
+            {
+                AllowMultiSelect = false,
+            };
+            if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                for (int i = 0; i < _directoryFile.FilesInDirectory.Count; i++)
+                {
+                    File.WriteAllBytes(Path.Combine(folderBrowserDialog.SelectedFolder, $"{i:d4}.dat"), _directoryFile.FilesInDirectory[i].Content);
+                }
+            }
+        }
+
+        private void ExtractTextFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "TXT file|*.txt"
+            };
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                List<string> text = new List<string>();
+
+                IEnumerable<(int offset, ScriptFile script)> files = _directoryFile.GetAllFiles().Select(f => (f.Offset, ScriptFile.ParseFromData(f.Content)));
+                foreach (var file in files)
+                {
+                    text.Add("---------------------------------------------------------------------------------");
+                    text.Add($"0x{file.offset:X8}\n");
+                    text.Add(string.Join("\n\n", file.script.Messages.Select(m => m.Text)));
+                }
+
+                File.WriteAllLines(saveFileDialog.FileName, text.ToArray());
+            }
+        }
+
+        private void DirectoryListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count > 0)
+            {
+                openInMessageButton.IsEnabled = true;
+            }
+        }
+
+        private void openInMessageButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var file = (FileInDirectory)directoryListBox.SelectedItem;
+                _scriptFile = ScriptFile.ParseFromData(file.Content);
+                messageListBox.ItemsSource = _scriptFile.Messages;
+
+                mainTabControl.SelectedIndex = 0;
+            }
+            catch (InvalidCastException)
+            {
+                MessageBox.Show("That's a directory, not a file.");
             }
         }
     }

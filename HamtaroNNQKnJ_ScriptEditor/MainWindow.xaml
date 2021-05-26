@@ -14,7 +14,7 @@
                 <MenuItem x:Name="fileMenuExtract" Header="Extract Text from Message File" Click="FileMenuExtract_Click" />
             </MenuItem>
         </Menu>-->
-        <TabControl>
+        <TabControl x:Name="mainTabControl">
             <TabItem Header="Messages">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -34,13 +34,16 @@
                 <Grid>
                     <ToolBarTray Orientation="Horizontal">
                         <ToolBar x:Name="directoryToolBar">
-                            <Button x:Name="openDirectoryFileButton" Content="Open" HorizontalAlignment="Left" />
+                            <Button x:Name="openDirectoryFileButton" Content="Open" HorizontalAlignment="Left" Click="OpenDirectoryFileButton_Click" />
                             <Button x:Name="saveDirectoryFileButton" Content="Save" HorizontalAlignment="Left" />
-                            <Button x:Name="extractDirectoryFileButton" Content="Extract All Files" HorizontalAlignment="Left" />
+                            <Button x:Name="extractDirectoryFileButton" Content="Extract All Files" HorizontalAlignment="Left" Click="ExtractDirectoryFileButton_Click" />
+                            <Button x:Name="extractTextFileButton" Content="Extract All Text" HorizontalAlignment="Left" Click="ExtractTextFileButton_Click" />
                         </ToolBar>
-                        <ToolBar x:Name="directorySelectToolBar" />
+                        <ToolBar x:Name="directorySelectToolBar">
+                            <Button x:Name="openInMessageButton" Content="Open in Messages" HorizontalAlignment="Left" IsEnabled="False" Click="openInMessageButton_Click" />
+                        </ToolBar>
                     </ToolBarTray>
-                    <ListBox x:Name="directoryListBox" Margin="0,30,0,0" />
+                    <ListBox x:Name="directoryListBox" Margin="0,30,0,0" SelectionChanged="DirectoryListBox_SelectionChanged" />
                 </Grid>
             </TabItem>
             <TabItem Header="Hex Editor">

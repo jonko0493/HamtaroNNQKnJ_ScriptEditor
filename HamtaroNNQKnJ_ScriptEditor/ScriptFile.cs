@@ -12,23 +12,15 @@ namespace HamtaroNNQKnJ_ScriptEditor
         public List<int> Pointers { get; set; } = new List<int>();
         public List<Message> Messages { get; set; } = new List<Message>();
 
-        private bool IsLessThanNextPointer(int i, int messageIndex, byte[] data)
-        {
-            if (messageIndex < Pointers.Count - 1)
-            {
-                return i < Pointers[messageIndex + 1];
-            }
-            else
-            {
-                return i < data.Length;
-            }
-        }
-
         public static ScriptFile ParseFromFile(string file)
         {
             byte[] data = File.ReadAllBytes(file);
-            int firstPointer = data.Length;
+            return ParseFromData(data);
+        }
 
+        public static ScriptFile ParseFromData(byte[] data)
+        {
+            int firstPointer = data.Length;
             var scriptFile = new ScriptFile();
 
             for (int i = 0; i < data.Length && i < firstPointer; i += 4)
@@ -47,7 +39,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             for (int messageIndex = 0; messageIndex < scriptFile.Pointers.Count; messageIndex++)
             {
                 scriptFile.Messages.Add(new Message { Text = "" });
-                for (int i = scriptFile.Pointers[messageIndex]; scriptFile.IsLessThanNextPointer(i, messageIndex, data);)
+                for (int i = scriptFile.Pointers[messageIndex]; Helpers.IsLessThanNextPointer(scriptFile.Pointers, i, messageIndex, data);)
                 {
                     if (i == scriptFile.Pointers[messageIndex])
                     {
@@ -67,6 +59,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         scriptFile.Messages[messageIndex].Text += op;
                         i += bytes;
                     }
+                    else if (data[i] == 0xFE)
+                    {
+                        scriptFile.Messages[messageIndex].Text += $"{FEByteToSpecialCharMap[data[i + 1]]}";
+                        i += 2;
+                    }
                     else
                     {
                         scriptFile.Messages[messageIndex].Text += $"{ByteToCharMap[data[i]]}";
@@ -85,6 +82,16 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 // Inserts newline character
                 return ("\n", 2);
             }
+            else if (nextTwoBytes[0] == 0x01 && nextTwoBytes[1] == 0x00)
+            {
+                // Unknown what this does -- seems like line end
+                return ("<0x01>", 3);
+            }
+            else if (nextTwoBytes[0] == 0x03)
+            {
+                // Unknown what this does -- seems like line end
+                return ("<0x03>", 2);
+            }
             else if (nextTwoBytes[0] == 0x0A && nextTwoBytes[1] == 0x00)
             {
                 // Unknown what this does -- seems like line end
@@ -94,6 +101,51 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 // Unknown what this does -- seems a bit like line start?
                 return ("<0x0B>", 3);
+            }
+            else if (nextTwoBytes[0] == 0x0C && nextTwoBytes[1] == 0x1E)
+            {
+                // Unknown what this does -- seems a bit like line start?
+                return ("<0x0C1E>", 3);
+            }
+            else if (nextTwoBytes[0] == 0x0C && nextTwoBytes[1] == 0x3C)
+            {
+                // Unknown what this does -- seems a bit like line start?
+                return ("<0x0C3c>", 3);
+            }
+            else if (nextTwoBytes[0] == 0x0C && nextTwoBytes[1] == 0x5A)
+            {
+                // Unknown what this does -- seems a bit like line start?
+                return ("<0x0C5A>", 3);
+            }
+            else if (nextTwoBytes[0] == 0x0E)
+            {
+                // Unknown what this does -- seems a bit like line start?
+                return ("<0x0E>", 2);
+            }
+            else if (nextTwoBytes[0] == 0x0F && nextTwoBytes[1] == 0x05)
+            {
+                // Unknown what this does -- seems a bit like line start?
+                return ("<0x0F>", 3);
+            }
+            else if (nextTwoBytes[0] == 0x10 && nextTwoBytes[1] == 0x03)
+            {
+                // Unknown what this does
+                return ("<0x1003>", 3);
+            }
+            else if (nextTwoBytes[0] == 0x10 && nextTwoBytes[1] == 0x04)
+            {
+                // Unknown what this does
+                return ("<0x1004>", 3);
+            }
+            else if (nextTwoBytes[0] == 0x11 && nextTwoBytes[1] == 0x00)
+            {
+                // Unknown what this does
+                return ("<0x1100>", 3);
+            }
+            else if (nextTwoBytes[0] == 0x11 && nextTwoBytes[1] == 0x01)
+            {
+                // Unknown what this does
+                return ("<0x1101>", 3);
             }
             else if (nextTwoBytes[0] == 0x20)
             {
@@ -114,6 +166,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 // Inserts tab character
                 return ("\t", 2);
+            }
+            else if (nextTwoBytes[0] == 0x36)
+            {
+                // Inserts tab character
+                return ("<longtab>", 2);
             }
             else
             {
@@ -409,6 +466,26 @@ namespace HamtaroNNQKnJ_ScriptEditor
             { 0xFB, "⬆" },
             #endregion
         };
+        public static Dictionary<byte, string> FEByteToSpecialCharMap = new Dictionary<byte, string>
+        {
+            { 0x00, "⬆" },
+            { 0x01, "➡" },
+            { 0x02, "⬇" },
+            { 0x03, "⬅" },
+            { 0x04, "🅰" },
+            { 0x05, "🅱" },
+            { 0x06, "<X>" },
+            { 0x07, "<Y>" },
+            { 0x08, "<R>" },
+            { 0x09, "<L>" },
+            { 0x0A, "♥" },
+            { 0x0B, "🎵" },
+            { 0x0C, "⭐" },
+            { 0x0D, "太" },
+            { 0x0E, "郎" },
+            { 0x0F, "⭕" },
+            { 0x10, "❌" },
+        };
     }
 
     public class Message
@@ -428,11 +505,44 @@ namespace HamtaroNNQKnJ_ScriptEditor
                     string op = string.Concat(Text.Substring(i).TakeWhile(c => c != '>'));
                     switch (op)
                     {
+                        case "<0x01":
+                            bytes.AddRange(new byte[] { 0xFF, 0x01, 0x00 });
+                            break;
+                        case "<0x03":
+                            bytes.AddRange(new byte[] { 0xFF, 0x03 });
+                            break;
                         case "<0x0A":
                             bytes.AddRange(new byte[] { 0xFF, 0x0A, 0x00 });
                             break;
                         case "<0x0B":
                             bytes.AddRange(new byte[] { 0xFF, 0x0B, 0x01 });
+                            break;
+                        case "<0x0C1E":
+                            bytes.AddRange(new byte[] { 0xFF, 0x0C, 0x1E });
+                            break;
+                        case "<0x0C3C":
+                            bytes.AddRange(new byte[] { 0xFF, 0x0C, 0x3C });
+                            break;
+                        case "<0x0C5A":
+                            bytes.AddRange(new byte[] { 0xFF, 0x0C, 0x5A });
+                            break;
+                        case "<0x0E":
+                            bytes.AddRange(new byte[] { 0xFF, 0x0E });
+                            break;
+                        case "<0x0F":
+                            bytes.AddRange(new byte[] { 0xFF, 0x0F, 0x05 });
+                            break;
+                        case "<0x1003":
+                            bytes.AddRange(new byte[] { 0xFF, 0x10, 0x03 });
+                            break;
+                        case "<0x1004":
+                            bytes.AddRange(new byte[] { 0xFF, 0x10, 0x04 });
+                            break;
+                        case "<0x1100":
+                            bytes.AddRange(new byte[] { 0xFF, 0x11, 0x00 });
+                            break;
+                        case "<0x1101":
+                            bytes.AddRange(new byte[] { 0xFF, 0x11, 0x01 });
                             break;
                         case "<black":
                             bytes.AddRange(new byte[] { 0xFF, 0x20 });
@@ -442,6 +552,21 @@ namespace HamtaroNNQKnJ_ScriptEditor
                             break;
                         case "<blue":
                             bytes.AddRange(new byte[] { 0xFF, 0x26 });
+                            break;
+                        case "<longtab":
+                            bytes.AddRange(new byte[] { 0xFF, 0x36 });
+                            break;
+                        case "<X":
+                            bytes.AddRange(new byte[] { 0xFE, 0x06 });
+                            break;
+                        case "<Y":
+                            bytes.AddRange(new byte[] { 0xFE, 0x07 });
+                            break;
+                        case "<R":
+                            bytes.AddRange(new byte[] { 0xFE, 0x08 });
+                            break;
+                        case "<L":
+                            bytes.AddRange(new byte[] { 0xFE, 0x09 });
                             break;
                     }
 
