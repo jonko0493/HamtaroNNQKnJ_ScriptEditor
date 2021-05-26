@@ -216,7 +216,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
         {
             List<int> pointers = new List<int>();
 
-            pointers.Add(Messages.Count * 4);
+            pointers.Add(Messages.Count * 4); // Adds the number of 32-bit integer bytes (4 * # of pointers) as first pointer
             for (int i = 0; i < Messages.Count - 1; i++)
             {
                 pointers.Add(pointers[i] + Messages[i].GetBytes().Length);

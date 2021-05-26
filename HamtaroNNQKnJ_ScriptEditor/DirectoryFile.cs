@@ -11,9 +11,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
     {
         public List<FileInDirectory> FilesInDirectory { get; set; } = new List<FileInDirectory>();
 
-        public static DirectoryFile ParseFromFile(string file)
+        public static DirectoryFile ParseFromData(byte[] data)
         {
-            byte[] data = File.ReadAllBytes(file);
             int firstPointer = data.Length;
             var directoryFile = new DirectoryFile();
 
@@ -50,6 +49,17 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
 
             return directoryFile;
+        }
+
+        public static DirectoryFile ParseFromFile(string file)
+        {
+            byte[] data = File.ReadAllBytes(file);
+            return ParseFromData(data);
+        }
+
+        public byte[] GetBytes()
+        {
+
         }
     }
 
