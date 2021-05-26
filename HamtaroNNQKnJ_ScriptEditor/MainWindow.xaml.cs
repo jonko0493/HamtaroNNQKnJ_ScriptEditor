@@ -145,7 +145,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             if (openFileDialog.ShowDialog() == true)
             {
                 _directoryFile = DirectoryFile.ParseFromFile(openFileDialog.FileName);
-                directoryListBox.ItemsSource = _directoryFile.GetAllDirectoryItems();
+                directoryListBox.ItemsSource = _directoryFile.FilesInDirectory;
             }
         }
 
@@ -174,7 +174,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 List<string> text = new List<string>();
 
-                IEnumerable<(int offset, ScriptFile script)> files = _directoryFile.GetAllFiles().Select(f => (f.Offset, ScriptFile.ParseFromData(f.Content)));
+                IEnumerable<(int offset, ScriptFile script)> files = _directoryFile.FilesInDirectory.Select(f => (f.Offset, ScriptFile.ParseFromData(f.Content)));
                 foreach (var file in files)
                 {
                     text.Add("---------------------------------------------------------------------------------");
@@ -196,18 +196,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         private void openInMessageButton_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                var file = (FileInDirectory)directoryListBox.SelectedItem;
-                _scriptFile = ScriptFile.ParseFromData(file.Content);
-                messageListBox.ItemsSource = _scriptFile.Messages;
+            var file = (FileInDirectory)directoryListBox.SelectedItem;
+            _scriptFile = ScriptFile.ParseFromData(file.Content);
+            messageListBox.ItemsSource = _scriptFile.Messages;
 
-                mainTabControl.SelectedIndex = 0;
-            }
-            catch (InvalidCastException)
-            {
-                MessageBox.Show("That's a directory, not a file.");
-            }
+            mainTabControl.SelectedIndex = 0;
         }
     }
 }
