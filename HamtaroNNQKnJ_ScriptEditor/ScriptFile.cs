@@ -29,7 +29,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
             int firstByte = BitConverter.ToInt32(new byte[] { data[0], data[1], data[2], data[3] });
             int secondByte = BitConverter.ToInt32(new byte[] { data[4], data[5], data[6], data[7] });
-            if (firstByte == 0x08 && secondByte == data.Length)
+            if (firstByte == 0x08 && secondByte >= data.Length)
             {
                 scriptFile.FileStart = firstByte;
                 scriptFile.FileEnd = secondByte;
@@ -118,7 +118,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 // Wait command
                 // second byte is wait duration
-                return ($"<0x0C{nextTwoBytes[1]:X2}>", 3);
+                return ($"<wait {nextTwoBytes[1]:X2}>", 3);
             }
             else if (nextTwoBytes[0] == 0x0E)
             {
@@ -152,12 +152,12 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
             else if (nextTwoBytes[0] == 0x11 && nextTwoBytes[1] == 0x00)
             {
-                // Unknown what this does
+                // Stylus, dialogue box remains
                 return ("<0x1100>", 3);
             }
             else if (nextTwoBytes[0] == 0x11 && nextTwoBytes[1] == 0x01)
             {
-                // Unknown what this does
+                // Stylus, dialogue box leaves
                 return ("<0x1101>", 3);
             }
             else if (nextTwoBytes[0] == 0x20)
@@ -201,6 +201,12 @@ namespace HamtaroNNQKnJ_ScriptEditor
             RecalculatePointers();
 
             List<byte> data = new List<byte>();
+
+            if (FileStart != FileEnd)
+            {
+                data.AddRange(BitConverter.GetBytes(FileStart));
+                data.AddRange(BitConverter.GetBytes(FileEnd));
+            }
 
             foreach (int pointer in Pointers)
             {
@@ -639,7 +645,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                             break;
                         default:
                             // Regex checks
-                            Match match0C = Regex.Match(op, @"<0C(\w{2})");
+                            Match match0C = Regex.Match(op, @"<wait (\w{2})");
                             if (match0C.Success)
                             {
                                 bytes.AddRange(new byte[] { 0xFF, 0x0C, byte.Parse(match0C.Groups[1].Value, NumberStyles.HexNumber) });

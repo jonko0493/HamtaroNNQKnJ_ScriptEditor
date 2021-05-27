@@ -23,7 +23,7 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         [TestCase(SCRIPT_WITH_INTRO_BYTES)]
         public void ParseWriteMatchTest(string file)
         {
-            byte[] dataOnDisk = File.ReadAllBytes(SINGLE_SCRIPT_FILE);
+            byte[] dataOnDisk = File.ReadAllBytes(file);
             var scriptFile = ScriptFile.ParseFromData(dataOnDisk);
 
             byte[] dataInMemory = scriptFile.GetBytes();
