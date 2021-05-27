@@ -13,6 +13,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
     {
         public List<int> Pointers { get; set; } = new List<int>();
         public List<Message> Messages { get; set; } = new List<Message>();
+        public int FileStart { get; set; } = 0;
+        public int FileEnd { get; set; } = 0;
 
         public static ScriptFile ParseFromFile(string file)
         {
@@ -25,12 +27,20 @@ namespace HamtaroNNQKnJ_ScriptEditor
             int firstPointer = data.Length;
             var scriptFile = new ScriptFile();
 
-            for (int i = 0; i < data.Length && i < firstPointer; i += 4)
+            int firstByte = BitConverter.ToInt32(new byte[] { data[0], data[1], data[2], data[3] });
+            int secondByte = BitConverter.ToInt32(new byte[] { data[4], data[5], data[6], data[7] });
+            if (firstByte == 0x08 && secondByte == data.Length)
+            {
+                scriptFile.FileStart = firstByte;
+                scriptFile.FileEnd = secondByte;
+            }
+
+            for (int i = scriptFile.FileStart; i < data.Length && i < firstPointer; i += 4)
             {
                 if (i < firstPointer)
                 {
-                    int pointer = BitConverter.ToInt32(new byte[] { data[i], data[i + 1], data[i + 2], data[i + 3] });
-                    if (i == 0)
+                    int pointer = scriptFile.FileStart + BitConverter.ToInt32(new byte[] { data[i], data[i + 1], data[i + 2], data[i + 3] });
+                    if (i == scriptFile.FileStart)
                     {
                         firstPointer = pointer;
                     }

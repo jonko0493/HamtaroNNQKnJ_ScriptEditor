@@ -10,18 +10,28 @@ namespace HamtaroNNQKnJ_ScriptEditor
     public class DirectoryFile
     {
         public List<FileInDirectory> FilesInDirectory { get; set; } = new List<FileInDirectory>();
+        public int FileStart { get; set; } = 0;
+        public int FileEnd { get; set; } = 0;
 
         public static DirectoryFile ParseFromData(byte[] data)
         {
             int firstPointer = data.Length;
             var directoryFile = new DirectoryFile();
 
-            for (int i = 0; i < data.Length && i < firstPointer; i += 4)
+            int firstByte = BitConverter.ToInt32(new byte[] { data[0], data[1], data[2], data[3] });
+            int secondByte = BitConverter.ToInt32(new byte[] { data[4], data[5], data[6], data[7] });
+            if (firstByte == 0x08 && secondByte == data.Length)
+            {
+                directoryFile.FileStart = firstByte;
+                directoryFile.FileEnd = secondByte;
+            }
+
+            for (int i = directoryFile.FileStart; i < data.Length && i < firstPointer; i += 4)
             {
                 if (i < firstPointer)
                 {
-                    int pointer = BitConverter.ToInt32(new byte[] { data[i], data[i + 1], data[i + 2], data[i + 3] });
-                    if (i == 0)
+                    int pointer = directoryFile.FileStart + BitConverter.ToInt32(new byte[] { data[i], data[i + 1], data[i + 2], data[i + 3] });
+                    if (i == directoryFile.FileStart)
                     {
                         firstPointer = pointer;
                     }
@@ -61,6 +71,12 @@ namespace HamtaroNNQKnJ_ScriptEditor
             RecalculatePointers();
 
             List<byte> data = new List<byte>();
+
+            if (FileStart != FileEnd)
+            {
+                data.AddRange(BitConverter.GetBytes(FileStart));
+                data.AddRange(BitConverter.GetBytes(FileEnd));
+            }
 
             foreach (var file in FilesInDirectory)
             {

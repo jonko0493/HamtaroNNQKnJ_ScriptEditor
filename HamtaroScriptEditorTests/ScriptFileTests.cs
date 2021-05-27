@@ -14,11 +14,13 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
     {
         private const string SINGLE_SCRIPT_FILE = ".\\inputs\\SingleScriptFile.dat";
         private const string CUTSCENE_SCRIPT_FILE = ".\\inputs\\CutsceneScriptFile.dat";
+        private const string SCRIPT_WITH_INTRO_BYTES = ".\\inputs\\SingleScriptWithIntroBytes.dat";
         private const string EDITED_POINTERS_FILE = ".\\inputs\\SingleScriptFileEditedPointers.dat";
 
         [Test]
         [TestCase(SINGLE_SCRIPT_FILE)]
         [TestCase(CUTSCENE_SCRIPT_FILE)]
+        [TestCase(SCRIPT_WITH_INTRO_BYTES)]
         public void ParseWriteMatchTest(string file)
         {
             byte[] dataOnDisk = File.ReadAllBytes(SINGLE_SCRIPT_FILE);
