@@ -175,6 +175,16 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 // Makes text blue
                 return ("<blue>", 2);
             }
+            else if (nextTwoBytes[0] == 0x30)
+            {
+                // Makes text normal size
+                return ("<normsize>", 2);
+            }
+            else if (nextTwoBytes[0] == 0x31)
+            {
+                // Unknown
+                return ("<0x31>", 2);
+            }
             else if (nextTwoBytes[0] == 0x33)
             {
                 // Makes text very big
@@ -187,7 +197,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
             else if (nextTwoBytes[0] == 0x36)
             {
-                // Inserts tab character
+                // Inserts long tab character
                 return ("<longtab>", 2);
             }
             else
@@ -236,6 +246,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
 
             Pointers = pointers;
+
+            if (FileEnd != FileStart)
+            {
+                FileEnd = pointers.Last() + Messages.Last().Text.Length;
+            }
         }
 
         public static Dictionary<byte, string> ByteToCharMap = new Dictionary<byte, string>
@@ -538,6 +553,15 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         case "<00":
                             bytes.AddRange(new byte[] { 0x00 });
                             break;
+                        case "<0xFB":
+                            bytes.AddRange(new byte[] { 0xFB });
+                            break;
+                        case "<0xFC":
+                            bytes.AddRange(new byte[] { 0xFC });
+                            break;
+                        case "<0xFD":
+                            bytes.AddRange(new byte[] { 0xFD });
+                            break;
                         case "<0x01":
                             bytes.AddRange(new byte[] { 0xFF, 0x01, 0x00 });
                             break;
@@ -574,15 +598,6 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         case "<0x1101":
                             bytes.AddRange(new byte[] { 0xFF, 0x11, 0x01 });
                             break;
-                        case "<0xFB":
-                            bytes.AddRange(new byte[] { 0xFB });
-                            break;
-                        case "<0xFC":
-                            bytes.AddRange(new byte[] { 0xFC });
-                            break;
-                        case "<0xFD":
-                            bytes.AddRange(new byte[] { 0xFD });
-                            break;
                         case "<black":
                             bytes.AddRange(new byte[] { 0xFF, 0x20 });
                             break;
@@ -591,6 +606,12 @@ namespace HamtaroNNQKnJ_ScriptEditor
                             break;
                         case "<blue":
                             bytes.AddRange(new byte[] { 0xFF, 0x26 });
+                            break;
+                        case "<normsize":
+                            bytes.AddRange(new byte[] { 0xFF, 0x30 });
+                            break;
+                        case "<0x31":
+                            bytes.AddRange(new byte[] { 0xFF, 0x31 });
                             break;
                         case "<big":
                             bytes.AddRange(new byte[] { 0xFF, 0x33 });

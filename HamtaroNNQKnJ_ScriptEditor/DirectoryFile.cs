@@ -108,6 +108,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 FilesInDirectory[i].Offset = FilesInDirectory[i - 1].Offset + FilesInDirectory[i - 1].Content.Length;
             }
+
+            if (FileEnd != FileStart)
+            {
+                FileEnd = FilesInDirectory.Last().Offset + FilesInDirectory.Last().Content.Length;
+            }
         }
     }
 

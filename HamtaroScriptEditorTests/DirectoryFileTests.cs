@@ -49,7 +49,7 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
 
         [Test]
         [TestCase(COMPLEX_LARGE_DIRECTORY_FILE, 11, 1, "やったー")]
-        //[TestCase(MASSIVE_DIRECTORY, 0)]
+        [TestCase(MASSIVE_DIRECTORY, 0, 0, "ランク")]
         public void RecalculatePointersTest(string file, int fileIndex, int messageIndex, string textToReplace)
         {
             byte[] dataOnDisk = File.ReadAllBytes(file);
