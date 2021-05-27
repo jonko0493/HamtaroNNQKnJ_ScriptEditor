@@ -14,12 +14,14 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
     {
         private const string SIMPLE_LARGE_DIRECTORY_FILE = ".\\inputs\\SimpleLargeDirectory.dat";
         private const string COMPLEX_LARGE_DIRECTORY_FILE = ".\\inputs\\ComplexLargeDirectory.dat";
-        private const string MASSIVE_DIRECTORY = ".\\inputs\\MassiveDirectory.dat";
+        private const string MASSIVE_DIRECTORY_FILE = ".\\inputs\\MassiveDirectory.dat";
+        private const string COMPLEX_LARGE_DIRECTORY_FILE_EDITED = ".\\inputs\\ComplexLargeDirectoryEdited.dat";
+        private const string MASSIVE_DIRECTORY_FILE_EDITED = ".\\inputs\\MassiveDirectoryEdited.dat";
 
         [Test]
         [TestCase(SIMPLE_LARGE_DIRECTORY_FILE)]
         [TestCase(COMPLEX_LARGE_DIRECTORY_FILE)]
-        [TestCase(MASSIVE_DIRECTORY)]
+        [TestCase(MASSIVE_DIRECTORY_FILE)]
         public void ParseWriteMatchTest(string file)
         {
             byte[] dataOnDisk = File.ReadAllBytes(file);
@@ -32,14 +34,13 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
 
         [Test]
         [TestCase(COMPLEX_LARGE_DIRECTORY_FILE, 11)]
-        [TestCase(MASSIVE_DIRECTORY, 0)]
+        [TestCase(MASSIVE_DIRECTORY_FILE, 0)]
         public void ReinsertFileTest(string file, int fileIndex)
         {
             byte[] dataOnDisk = File.ReadAllBytes(file);
             DirectoryFile directoryFile = DirectoryFile.ParseFromData(dataOnDisk);
 
             ScriptFile scriptFile = ScriptFile.ParseFromData(directoryFile.FilesInDirectory[fileIndex].Content);
-            scriptFile.Messages[0].Text = scriptFile.Messages[0].Text.Replace("やったー", "Wooo");
             directoryFile.ReinsertFile(fileIndex, scriptFile);
 
             byte[] dataInMemory = directoryFile.GetBytes();
@@ -48,12 +49,11 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         }
 
         [Test]
-        [TestCase(COMPLEX_LARGE_DIRECTORY_FILE, 11, 1, "やったー")]
-        [TestCase(MASSIVE_DIRECTORY, 0, 0, "ランク")]
-        public void RecalculatePointersTest(string file, int fileIndex, int messageIndex, string textToReplace)
+        [TestCase(COMPLEX_LARGE_DIRECTORY_FILE, 11, 1, "やったー", COMPLEX_LARGE_DIRECTORY_FILE_EDITED)]
+        [TestCase(MASSIVE_DIRECTORY_FILE, 0, 2, "ランク", MASSIVE_DIRECTORY_FILE_EDITED)]
+        public void RecalculatePointersTest(string file, int fileIndex, int messageIndex, string textToReplace, string editedFile)
         {
-            byte[] dataOnDisk = File.ReadAllBytes(file);
-            DirectoryFile directoryFile = DirectoryFile.ParseFromData(dataOnDisk);
+            DirectoryFile directoryFile = DirectoryFile.ParseFromFile(file);
 
             string[] replacements = new string[] { "W", "Wo", "Woo", "Wooh", "Wooho", "Woohoo", "Woohoo!" };
 
@@ -76,6 +76,9 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
             }
 
             byte[] dataInMemory = directoryFile.GetBytes();
+            byte[] dataOnDisk = File.ReadAllBytes(editedFile);
+
+            Assert.AreEqual(dataOnDisk, dataInMemory);
         }
     }
 }
