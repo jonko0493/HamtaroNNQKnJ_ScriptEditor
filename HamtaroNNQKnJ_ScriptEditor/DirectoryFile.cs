@@ -12,11 +12,12 @@ namespace HamtaroNNQKnJ_ScriptEditor
         public List<FileInDirectory> FilesInDirectory { get; set; } = new List<FileInDirectory>();
         public int FileStart { get; set; } = 0;
         public int FileEnd { get; set; } = 0;
+        public string FileName { get; set; }
 
-        public static DirectoryFile ParseFromData(byte[] data)
+        public static DirectoryFile ParseFromData(byte[] data, string fileName = "")
         {
             int firstPointer = data.Length;
-            var directoryFile = new DirectoryFile();
+            var directoryFile = new DirectoryFile { FileName = fileName };
 
             int firstByte = BitConverter.ToInt32(new byte[] { data[0], data[1], data[2], data[3] });
             int secondByte = BitConverter.ToInt32(new byte[] { data[4], data[5], data[6], data[7] });
@@ -63,7 +64,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         public static DirectoryFile ParseFromFile(string file)
         {
-            return ParseFromData(File.ReadAllBytes(file));
+            return ParseFromData(File.ReadAllBytes(file), Path.GetFileName(file));
         }
 
         public byte[] GetBytes()
@@ -118,12 +119,27 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
     public class FileInDirectory
     {
+        private byte[] _content;
+
         public int Offset { get; set; }
-        public byte[] Content { get; set; }
+        public byte[] Content { get { return _content; } set
+            {
+                _content = value;
+                if (ScriptFile.CanParse(Content))
+                {
+                    FileType = "Script File";
+                }
+                else
+                {
+                    FileType = "Unknown File";
+                }
+            }
+        }
+        public string FileType { get; private set; }
 
         public override string ToString()
         {
-            return $"Offset: 0x{Offset:X4}; Size: {Content.Length} bytes";
+            return $"Offset: 0x{Offset:X4}\tSize: {_content.Length} bytes\t{FileType}";
         }
     }
 }

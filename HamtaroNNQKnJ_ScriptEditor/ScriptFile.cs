@@ -15,17 +15,18 @@ namespace HamtaroNNQKnJ_ScriptEditor
         public List<Message> Messages { get; set; } = new List<Message>();
         public int FileStart { get; set; } = 0;
         public int FileEnd { get; set; } = 0;
+        public string FileName { get; set; }
 
         public static ScriptFile ParseFromFile(string file)
         {
             byte[] data = File.ReadAllBytes(file);
-            return ParseFromData(data);
+            return ParseFromData(data, Path.GetFileName(file));
         }
 
-        public static ScriptFile ParseFromData(byte[] data)
+        public static ScriptFile ParseFromData(byte[] data, string fileName = "")
         {
             int firstPointer = data.Length;
-            var scriptFile = new ScriptFile();
+            var scriptFile = new ScriptFile { FileName = fileName };
 
             int firstByte = BitConverter.ToInt32(new byte[] { data[0], data[1], data[2], data[3] });
             int secondByte = BitConverter.ToInt32(new byte[] { data[4], data[5], data[6], data[7] });
@@ -53,12 +54,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 scriptFile.Messages.Add(new Message { Text = "" });
                 for (int i = scriptFile.Pointers[messageIndex]; Helpers.IsLessThanNextPointer(scriptFile.Pointers, i, messageIndex, data);)
                 {
-                    if (i == scriptFile.Pointers[messageIndex])
-                    {
-                        scriptFile.Messages[messageIndex].UnknownBytes = BitConverter.ToUInt16(new byte[] { data[i], data[i + 1] });
-                        i += 2;
-                    }
-                    else if (data[i] == 0x00)
+                    if (data[i] == 0x00)
                     {
                         scriptFile.Messages[messageIndex].Text += "<00>";
                         i += 1;
@@ -87,6 +83,19 @@ namespace HamtaroNNQKnJ_ScriptEditor
             return scriptFile;
         }
 
+        public static bool CanParse(byte[] data)
+        {
+            try
+            {
+                ParseFromData(data);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public static (string op, int bytes) GetFFOp(byte[] nextTwoBytes, Exception e)
         {
             if (nextTwoBytes[0] == 0x00)
@@ -94,14 +103,14 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 // Inserts newline character
                 return ("\n", 2);
             }
-            else if (nextTwoBytes[0] == 0x01 && nextTwoBytes[1] == 0x00)
+            else if (nextTwoBytes[0] == 0x01)
             {
-                // Unknown what this does -- seems like line end
-                return ("<0x01>", 3);
+                // Scrolls textbox
+                return ("<scroll>", 2);
             }
             else if (nextTwoBytes[0] == 0x03)
             {
-                // Unknown what this does -- seems like line end
+                // Possibly makes the text go zoom
                 return ("<0x03>", 2);
             }
             else if (nextTwoBytes[0] == 0x0A && nextTwoBytes[1] == 0x00)
@@ -122,32 +131,22 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
             else if (nextTwoBytes[0] == 0x0E)
             {
-                // Unknown what this does -- seems a bit like line start?
-                return ("<0x0E>", 2);
+                // Prints user name
+                return ("<username>", 2);
             }
-            else if (nextTwoBytes[0] == 0x0F && nextTwoBytes[1] == 0x01)
+            else if (nextTwoBytes[0] == 0x0F)
             {
-                // Unknown what this does -- seems a bit like line start?
-                return ("<0x0F01>", 3);
-            }
-            else if (nextTwoBytes[0] == 0x0F && nextTwoBytes[1] == 0x04)
-            {
-                // Unknown what this does -- seems a bit like line start?
-                return ("<0x0F04>", 3);
-            }
-            else if (nextTwoBytes[0] == 0x0F && nextTwoBytes[1] == 0x05)
-            {
-                // Unknown what this does -- seems a bit like line start?
-                return ("<0x0F05>", 3);
+                // Looks like it prints a number of spaces with a O in the middle
+                return ($"<0x0F{nextTwoBytes[1]:X2}>", 3);
             }
             else if (nextTwoBytes[0] == 0x10 && nextTwoBytes[1] == 0x03)
             {
-                // Unknown what this does
+                // Seems to just print a zero
                 return ("<0x1003>", 3);
             }
             else if (nextTwoBytes[0] == 0x10 && nextTwoBytes[1] == 0x04)
             {
-                // Unknown what this does
+                // Seems to just print a zero
                 return ("<0x1004>", 3);
             }
             else if (nextTwoBytes[0] == 0x11 && nextTwoBytes[1] == 0x00)
@@ -182,13 +181,13 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
             else if (nextTwoBytes[0] == 0x31)
             {
-                // Unknown
-                return ("<0x31>", 2);
+                // Makes text big
+                return ("<big>", 2);
             }
             else if (nextTwoBytes[0] == 0x33)
             {
                 // Makes text very big
-                return ("<big>", 2);
+                return ("<huge>", 2);
             }
             else if (nextTwoBytes[0] == 0x35)
             {
@@ -200,6 +199,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 // Inserts long tab character
                 return ("<longtab>", 2);
             }
+            else if (nextTwoBytes[0] == 0x65)
+            {
+                // Unknown
+                return ("<0x65>", 2);
+            }
             else
             {
                 throw e;
@@ -209,7 +213,10 @@ namespace HamtaroNNQKnJ_ScriptEditor
         public byte[] GetBytes()
         {
             RecalculatePointers();
-
+            return GetData();
+        }
+        private byte[] GetData()
+        {
             List<byte> data = new List<byte>();
 
             if (FileStart != FileEnd)
@@ -249,7 +256,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
             if (FileEnd != FileStart)
             {
-                FileEnd = pointers.Last() + Messages.Last().Text.Length;
+                FileEnd = GetData().Length;
             }
         }
 
@@ -535,13 +542,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
     public class Message
     {
-        public ushort UnknownBytes { get; set; }
         public string Text { get; set; }
 
         public byte[] GetBytes()
         {
             var bytes = new List<byte>();
-            bytes.AddRange(BitConverter.GetBytes(UnknownBytes));
 
             for (int i = 0; i < Text.Length; i++)
             {
@@ -562,8 +567,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         case "<0xFD":
                             bytes.AddRange(new byte[] { 0xFD });
                             break;
-                        case "<0x01":
-                            bytes.AddRange(new byte[] { 0xFF, 0x01, 0x00 });
+                        case "<scroll":
+                            bytes.AddRange(new byte[] { 0xFF, 0x01 });
                             break;
                         case "<0x03":
                             bytes.AddRange(new byte[] { 0xFF, 0x03 });
@@ -574,17 +579,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         case "<0x0B":
                             bytes.AddRange(new byte[] { 0xFF, 0x0B, 0x01 });
                             break;
-                        case "<0x0E":
+                        case "<username":
                             bytes.AddRange(new byte[] { 0xFF, 0x0E });
-                            break;
-                        case "<0x0F01":
-                            bytes.AddRange(new byte[] { 0xFF, 0x0F, 0x01 });
-                            break;
-                        case "<0x0F04":
-                            bytes.AddRange(new byte[] { 0xFF, 0x0F, 0x04 });
-                            break;
-                        case "<0x0F05":
-                            bytes.AddRange(new byte[] { 0xFF, 0x0F, 0x05 });
                             break;
                         case "<0x1003":
                             bytes.AddRange(new byte[] { 0xFF, 0x10, 0x03 });
@@ -610,14 +606,17 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         case "<normsize":
                             bytes.AddRange(new byte[] { 0xFF, 0x30 });
                             break;
-                        case "<0x31":
+                        case "<big":
                             bytes.AddRange(new byte[] { 0xFF, 0x31 });
                             break;
-                        case "<big":
+                        case "<huge":
                             bytes.AddRange(new byte[] { 0xFF, 0x33 });
                             break;
                         case "<longtab":
                             bytes.AddRange(new byte[] { 0xFF, 0x36 });
+                            break;
+                        case "<0x65":
+                            bytes.AddRange(new byte[] { 0xFF, 0x65 });
                             break;
                         case "<up":
                             bytes.AddRange(new byte[] { 0xFE, 0x00 });
@@ -667,9 +666,15 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         default:
                             // Regex checks
                             Match match0C = Regex.Match(op, @"<wait (\w{2})");
+                            Match match0F = Regex.Match(op, @"<0x0F(\w{2})");
+
                             if (match0C.Success)
                             {
                                 bytes.AddRange(new byte[] { 0xFF, 0x0C, byte.Parse(match0C.Groups[1].Value, NumberStyles.HexNumber) });
+                            }
+                            else if (match0F.Success)
+                            {
+                                bytes.AddRange(new byte[] { 0xFF, 0x0F, byte.Parse(match0F.Groups[1].Value, NumberStyles.HexNumber) });
                             }
                             break;
                     }

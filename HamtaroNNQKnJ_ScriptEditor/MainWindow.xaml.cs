@@ -23,6 +23,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
     /// </summary>
     public partial class MainWindow : Window
     {
+        private static string BaseWindowTitle = "Hamtaro Q Script Editor";
+
         private ScriptFile _scriptFile { get; set; }
         private DirectoryFile _directoryFile { get; set; }
         private int _openDirectoryFileIndex { get; set; } = -1;
@@ -30,6 +32,23 @@ namespace HamtaroNNQKnJ_ScriptEditor
         public MainWindow()
         {
             InitializeComponent();
+            Title = BaseWindowTitle;
+        }
+
+        private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (mainTabControl.SelectedIndex == 0 && _scriptFile != null) // Messages
+            {
+                Title = $"{BaseWindowTitle} - {_scriptFile.FileName}";
+            }
+            else if (mainTabControl.SelectedIndex == 1 && _directoryFile != null) // Directory File
+            {
+                Title = $"{BaseWindowTitle} - {_directoryFile.FileName}";
+            }
+            else
+            {
+                Title = BaseWindowTitle;
+            }
         }
 
         private void OpenMessagesButton_Click(object sender, RoutedEventArgs e)
@@ -44,6 +63,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 messageListBox.ItemsSource = _scriptFile.Messages;
                 _openDirectoryFileIndex = -1;
                 reinsertMessageButton.IsEnabled = false;
+
+                Title = $"{BaseWindowTitle} - {_scriptFile.FileName}";
             }
         }
 
@@ -74,7 +95,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
         private void ReinsertMessageButton_Click(object sender, RoutedEventArgs e)
         {
             _directoryFile.ReinsertFile(_openDirectoryFileIndex, _scriptFile);
-            mainTabControl.SelectedItem = 1;
+            mainTabControl.SelectedIndex = 1;
             directoryListBox.Items.Refresh();
         }
 
@@ -158,6 +179,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 directoryListBox.ItemsSource = _directoryFile.FilesInDirectory;
                 _openDirectoryFileIndex = -1;
                 reinsertMessageButton.IsEnabled = false;
+
+                Title = $"{BaseWindowTitle} - {_directoryFile.FileName}";
             }
         }
 
@@ -188,7 +211,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
         }
 
-        private void ExtractTextFileButton_Click(object sender, RoutedEventArgs e)
+        private void ExtractAllTextFileButton_Click(object sender, RoutedEventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
@@ -198,7 +221,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 List<string> text = new List<string>();
 
-                IEnumerable<(int offset, ScriptFile script)> files = _directoryFile.FilesInDirectory.Select(f => (f.Offset, ScriptFile.ParseFromData(f.Content)));
+                IEnumerable<(int offset, ScriptFile script)> files = _directoryFile.FilesInDirectory
+                    .Where(f => f.FileType == "Script File")
+                    .Select(f => (f.Offset, ScriptFile.ParseFromData(f.Content)));
                 foreach (var file in files)
                 {
                     text.Add("---------------------------------------------------------------------------------");
@@ -222,6 +247,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
         {
             var file = (FileInDirectory)directoryListBox.SelectedItem;
             _scriptFile = ScriptFile.ParseFromData(file.Content);
+            _scriptFile.FileName = $"{_directoryFile.FileName} at 0x{file.Offset:X8}";
             messageListBox.ItemsSource = _scriptFile.Messages;
 
             _openDirectoryFileIndex = directoryListBox.SelectedIndex;

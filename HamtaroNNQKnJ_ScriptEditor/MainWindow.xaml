@@ -14,7 +14,7 @@
                 <MenuItem x:Name="fileMenuExtract" Header="Extract Text from Message File" Click="FileMenuExtract_Click" />
             </MenuItem>
         </Menu>-->
-        <TabControl x:Name="mainTabControl">
+        <TabControl x:Name="mainTabControl" SelectionChanged="MainTabControl_SelectionChanged">
             <TabItem Header="Messages">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -38,7 +38,7 @@
                             <Button x:Name="openDirectoryFileButton" Content="Open" HorizontalAlignment="Left" Click="OpenDirectoryFileButton_Click" />
                             <Button x:Name="saveDirectoryFileButton" Content="Save" HorizontalAlignment="Left" Click="SaveDirectoryFileButton_Click" />
                             <Button x:Name="extractDirectoryFileButton" Content="Extract All Files" HorizontalAlignment="Left" Click="ExtractDirectoryFileButton_Click" />
-                            <Button x:Name="extractTextFileButton" Content="Extract All Text" HorizontalAlignment="Left" Click="ExtractTextFileButton_Click" />
+                            <Button x:Name="extractTextFileButton" Content="Extract All Text" HorizontalAlignment="Left" Click="ExtractAllTextFileButton_Click" />
                         </ToolBar>
                         <ToolBar x:Name="directorySelectToolBar">
                             <Button x:Name="openInMessageButton" Content="Open in Messages" HorizontalAlignment="Left" IsEnabled="False" Click="OpenInMessageButton_Click" />
