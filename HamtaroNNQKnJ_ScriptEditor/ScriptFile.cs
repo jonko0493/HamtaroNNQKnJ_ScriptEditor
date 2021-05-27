@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace HamtaroNNQKnJ_ScriptEditor
@@ -48,7 +50,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                     }
                     else if (data[i] == 0x00)
                     {
-                        // idk
+                        scriptFile.Messages[messageIndex].Text += "<00>";
                         i += 1;
                     }
                     else if (data[i] == 0xFF) // opcode
@@ -102,20 +104,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 // Unknown what this does -- seems a bit like line start?
                 return ("<0x0B>", 3);
             }
-            else if (nextTwoBytes[0] == 0x0C && nextTwoBytes[1] == 0x1E)
+            else if (nextTwoBytes[0] == 0x0C)
             {
-                // Unknown what this does -- seems a bit like line start?
-                return ("<0x0C1E>", 3);
-            }
-            else if (nextTwoBytes[0] == 0x0C && nextTwoBytes[1] == 0x3C)
-            {
-                // Unknown what this does -- seems a bit like line start?
-                return ("<0x0C3c>", 3);
-            }
-            else if (nextTwoBytes[0] == 0x0C && nextTwoBytes[1] == 0x5A)
-            {
-                // Unknown what this does -- seems a bit like line start?
-                return ("<0x0C5A>", 3);
+                // Wait command
+                // second byte is wait duration
+                return ($"<0x0C{nextTwoBytes[1]:X2}>", 3);
             }
             else if (nextTwoBytes[0] == 0x0E)
             {
@@ -172,6 +165,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 // Makes text blue
                 return ("<blue>", 2);
             }
+            else if (nextTwoBytes[0] == 0x33)
+            {
+                // Makes text very big
+                return ("<big>", 2);
+            }
             else if (nextTwoBytes[0] == 0x35)
             {
                 // Inserts tab character
@@ -202,7 +200,6 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 data.AddRange(message.GetBytes());
             }
-            data.Add(0x00); // end file
 
             return data.ToArray();
         }
@@ -522,6 +519,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
                     string op = string.Concat(Text.Substring(i).TakeWhile(c => c != '>'));
                     switch (op)
                     {
+                        case "<00":
+                            bytes.AddRange(new byte[] { 0x00 });
+                            break;
                         case "<0x01":
                             bytes.AddRange(new byte[] { 0xFF, 0x01, 0x00 });
                             break;
@@ -533,15 +533,6 @@ namespace HamtaroNNQKnJ_ScriptEditor
                             break;
                         case "<0x0B":
                             bytes.AddRange(new byte[] { 0xFF, 0x0B, 0x01 });
-                            break;
-                        case "<0x0C1E":
-                            bytes.AddRange(new byte[] { 0xFF, 0x0C, 0x1E });
-                            break;
-                        case "<0x0C3C":
-                            bytes.AddRange(new byte[] { 0xFF, 0x0C, 0x3C });
-                            break;
-                        case "<0x0C5A":
-                            bytes.AddRange(new byte[] { 0xFF, 0x0C, 0x5A });
                             break;
                         case "<0x0E":
                             bytes.AddRange(new byte[] { 0xFF, 0x0E });
@@ -584,6 +575,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
                             break;
                         case "<blue":
                             bytes.AddRange(new byte[] { 0xFF, 0x26 });
+                            break;
+                        case "<big":
+                            bytes.AddRange(new byte[] { 0xFF, 0x33 });
                             break;
                         case "<longtab":
                             bytes.AddRange(new byte[] { 0xFF, 0x36 });
@@ -632,6 +626,14 @@ namespace HamtaroNNQKnJ_ScriptEditor
                             break;
                         case "<cross":
                             bytes.AddRange(new byte[] { 0xFE, 0x10 });
+                            break;
+                        default:
+                            // Regex checks
+                            Match match0C = Regex.Match(op, @"<0C(\w{2})");
+                            if (match0C.Success)
+                            {
+                                bytes.AddRange(new byte[] { 0xFF, 0x0C, byte.Parse(match0C.Groups[1].Value, NumberStyles.HexNumber) });
+                            }
                             break;
                     }
 

@@ -25,6 +25,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
     {
         private ScriptFile _scriptFile { get; set; }
         private DirectoryFile _directoryFile { get; set; }
+        private int _openDirectoryFileIndex { get; set; } = -1;
 
         public MainWindow()
         {
@@ -41,6 +42,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 _scriptFile = ScriptFile.ParseFromFile(openFileDialog.FileName);
                 messageListBox.ItemsSource = _scriptFile.Messages;
+                _openDirectoryFileIndex = -1;
+                reinsertMessageButton.IsEnabled = false;
             }
         }
 
@@ -66,6 +69,12 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 File.WriteAllLines(saveFileDialog.FileName, _scriptFile.Messages.Select(m => $"{m.Text}\n"));
             }
+        }
+
+        private void ReinsertMessageButton_Click(object sender, RoutedEventArgs e)
+        {
+            _directoryFile.ReinsertFile(_openDirectoryFileIndex, _scriptFile);
+            directoryListBox.Items.Refresh();
         }
 
         private void MessageListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -146,6 +155,20 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 _directoryFile = DirectoryFile.ParseFromFile(openFileDialog.FileName);
                 directoryListBox.ItemsSource = _directoryFile.FilesInDirectory;
+                _openDirectoryFileIndex = -1;
+                reinsertMessageButton.IsEnabled = false;
+            }
+        }
+
+        private void SaveDirectoryFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "DAT file|*.dat"
+            };
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                _directoryFile.WriteToFile(saveFileDialog.FileName);
             }
         }
 
@@ -194,11 +217,14 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
         }
 
-        private void openInMessageButton_Click(object sender, RoutedEventArgs e)
+        private void OpenInMessageButton_Click(object sender, RoutedEventArgs e)
         {
             var file = (FileInDirectory)directoryListBox.SelectedItem;
             _scriptFile = ScriptFile.ParseFromData(file.Content);
             messageListBox.ItemsSource = _scriptFile.Messages;
+
+            _openDirectoryFileIndex = directoryListBox.SelectedIndex;
+            reinsertMessageButton.IsEnabled = true;
 
             mainTabControl.SelectedIndex = 0;
         }

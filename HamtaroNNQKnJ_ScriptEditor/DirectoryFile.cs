@@ -53,13 +53,45 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         public static DirectoryFile ParseFromFile(string file)
         {
-            byte[] data = File.ReadAllBytes(file);
-            return ParseFromData(data);
+            return ParseFromData(File.ReadAllBytes(file));
         }
 
         public byte[] GetBytes()
         {
+            RecalculatePointers();
 
+            List<byte> data = new List<byte>();
+
+            foreach (var file in FilesInDirectory)
+            {
+                data.AddRange(BitConverter.GetBytes(file.Offset));
+            }
+            foreach (var file in FilesInDirectory)
+            {
+                data.AddRange(file.Content);
+            }
+
+            return data.ToArray();
+        }
+
+        public void WriteToFile(string file)
+        {
+            File.WriteAllBytes(file, GetBytes());
+        }
+
+        public void ReinsertFile(int index, ScriptFile scriptFile)
+        {
+            FilesInDirectory[index].Content = scriptFile.GetBytes();
+            RecalculatePointers();
+        }
+
+        private void RecalculatePointers()
+        {
+            FilesInDirectory[0].Offset = FilesInDirectory.Count * 4; // Adds the number of 32-bit integer bytes (4 * # of pointers) as first pointer
+            for (int i = 1; i < FilesInDirectory.Count; i++)
+            {
+                FilesInDirectory[i].Offset = FilesInDirectory[i - 1].Offset + FilesInDirectory[i - 1].Content.Length;
+            }
         }
     }
 

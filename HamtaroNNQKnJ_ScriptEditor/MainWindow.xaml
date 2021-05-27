@@ -25,6 +25,7 @@
                         <Button x:Name="openMessagesFileButton" Content="Open" HorizontalAlignment="Left" Click="OpenMessagesButton_Click" />
                         <Button x:Name="saveMessagesFileButton" Content="Save" HorizontalAlignment="Left" Click="SaveMessagesButton_Click" />
                         <Button x:Name="extractMessagesFileButton" Content="Extract" HorizontalAlignment="Left" Click="ExtractMessagesButton_Click" />
+                        <Button x:Name="reinsertMessageButton" Content="Reinsert into Directory File" HorizontalAlignment="Left" IsEnabled="False" Click="ReinsertMessageButton_Click" />
                     </ToolBar>
                     <ListBox x:Name="messageListBox" Margin="0,30,410,0" SelectionChanged="MessageListBox_SelectionChanged" Grid.ColumnSpan="2" />
                     <StackPanel x:Name="editStackPanel" Margin="290,30,0,0" Grid.Column="1" />
@@ -35,12 +36,12 @@
                     <ToolBarTray Orientation="Horizontal">
                         <ToolBar x:Name="directoryToolBar">
                             <Button x:Name="openDirectoryFileButton" Content="Open" HorizontalAlignment="Left" Click="OpenDirectoryFileButton_Click" />
-                            <Button x:Name="saveDirectoryFileButton" Content="Save" HorizontalAlignment="Left" />
+                            <Button x:Name="saveDirectoryFileButton" Content="Save" HorizontalAlignment="Left" Click="SaveDirectoryFileButton_Click" />
                             <Button x:Name="extractDirectoryFileButton" Content="Extract All Files" HorizontalAlignment="Left" Click="ExtractDirectoryFileButton_Click" />
                             <Button x:Name="extractTextFileButton" Content="Extract All Text" HorizontalAlignment="Left" Click="ExtractTextFileButton_Click" />
                         </ToolBar>
                         <ToolBar x:Name="directorySelectToolBar">
-                            <Button x:Name="openInMessageButton" Content="Open in Messages" HorizontalAlignment="Left" IsEnabled="False" Click="openInMessageButton_Click" />
+                            <Button x:Name="openInMessageButton" Content="Open in Messages" HorizontalAlignment="Left" IsEnabled="False" Click="OpenInMessageButton_Click" />
                         </ToolBar>
                     </ToolBarTray>
                     <ListBox x:Name="directoryListBox" Margin="0,30,0,0" SelectionChanged="DirectoryListBox_SelectionChanged" />

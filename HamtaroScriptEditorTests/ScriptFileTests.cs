@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using HamtaroNNQKnJ_ScriptEditor;
 using NUnit;
 using NUnit.Framework;
 using System;
@@ -9,15 +8,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HamtaroNNQKnJ_ScriptEditor.tests
+namespace HamtaroNNQKnJ_ScriptEditor.Tests
 {
     public class ScriptFileTests
     {
-        private static string SINGLE_SCRIPT_FILE = ".\\inputs\\SingleScriptFile.dat";
-        private static string EDITED_POINTERS_FILE = ".\\inputs\\SingleScriptFileEditedPointers.dat";
+        private const string SINGLE_SCRIPT_FILE = ".\\inputs\\SingleScriptFile.dat";
+        private const string CUTSCENE_SCRIPT_FILE = ".\\inputs\\CutsceneScriptFile.dat";
+        private const string EDITED_POINTERS_FILE = ".\\inputs\\SingleScriptFileEditedPointers.dat";
 
         [Test]
-        public void ParseWriteMatchTest()
+        [TestCase(SINGLE_SCRIPT_FILE)]
+        [TestCase(CUTSCENE_SCRIPT_FILE)]
+        public void ParseWriteMatchTest(string file)
         {
             byte[] dataOnDisk = File.ReadAllBytes(SINGLE_SCRIPT_FILE);
             var scriptFile = ScriptFile.ParseFromData(dataOnDisk);
