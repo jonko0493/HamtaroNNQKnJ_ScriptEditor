@@ -26,6 +26,9 @@
                         <Button x:Name="saveMessagesFileButton" Content="Save" HorizontalAlignment="Left" Click="SaveMessagesButton_Click" />
                         <Button x:Name="extractMessagesFileButton" Content="Extract" HorizontalAlignment="Left" Click="ExtractMessagesButton_Click" />
                         <Button x:Name="reinsertMessageButton" Content="Reinsert into Directory File" HorizontalAlignment="Left" IsEnabled="False" Click="ReinsertMessageButton_Click" />
+                        <Grid Margin="270,0,0,0">
+                            <CheckBox x:Name="showIntroBytesCheckBox" VerticalAlignment="Center" Content="Show Intro Bytes" Click="ShowIntroBytesCheckBox_Click" />
+                        </Grid>
                     </ToolBar>
                     <ListBox x:Name="messageListBox" Margin="0,30,410,0" SelectionChanged="MessageListBox_SelectionChanged" Grid.ColumnSpan="2" />
                     <StackPanel x:Name="editStackPanel" Margin="290,30,0,0" Grid.Column="1" />

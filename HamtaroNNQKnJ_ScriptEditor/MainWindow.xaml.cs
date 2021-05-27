@@ -103,12 +103,26 @@ namespace HamtaroNNQKnJ_ScriptEditor
         {
             editStackPanel.Children.Clear();
 
-            if (e.AddedItems.Count == 0)
+            if (messageListBox.SelectedIndex == -1)
             {
                 return;
             }
 
-            var message = (Message)e.AddedItems[0];
+            var message = (Message)messageListBox.SelectedItem;
+
+            if (showIntroBytesCheckBox.IsChecked == true)
+            {
+                var introBytesTextBox = new MessageTextBox
+                {
+                    Text = message.IntroBytes,
+                    Message = message,
+                    AcceptsReturn = false,
+                    MaxLength = 2,
+                };
+                introBytesTextBox.TextChanged += IntroBytesTextBox_TextChanged;
+                
+                editStackPanel.Children.Add(introBytesTextBox);
+            }    
 
             var messageTextBox = new MessageTextBox
             {
@@ -120,6 +134,19 @@ namespace HamtaroNNQKnJ_ScriptEditor
             messageTextBox.TextChanged += MessageTextBox_TextChanged;
 
             editStackPanel.Children.Add(messageTextBox);
+        }
+
+        private void ShowIntroBytesCheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            MessageListBox_SelectionChanged(null, null);
+        }
+
+        private void IntroBytesTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var introBytesTextBox = (MessageTextBox)sender;
+
+            introBytesTextBox.Message.IntroBytes = introBytesTextBox.Text;
+            messageListBox.Items.Refresh();
         }
 
         private void MessageTextBox_TextChanged(object sender, TextChangedEventArgs e)

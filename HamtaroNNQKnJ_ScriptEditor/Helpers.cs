@@ -11,13 +11,18 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         public static bool IsLessThanNextPointer(List<int> pointers, int i, int messageIndex, byte[] data)
         {
-            if (messageIndex < pointers.Count - 1)
+            return i < NextPointer(pointers, messageIndex, data);
+        }
+
+        public static int NextPointer(List<int> pointers, int index, byte[] data)
+        {
+            if (index < pointers.Count - 1)
             {
-                return i < pointers[messageIndex + 1];
+                return pointers[index + 1];
             }
             else
             {
-                return i < data.Length;
+                return data.Length;
             }
         }
     }

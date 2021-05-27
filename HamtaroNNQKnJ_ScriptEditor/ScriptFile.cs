@@ -52,35 +52,63 @@ namespace HamtaroNNQKnJ_ScriptEditor
             for (int messageIndex = 0; messageIndex < scriptFile.Pointers.Count; messageIndex++)
             {
                 scriptFile.Messages.Add(new Message { Text = "" });
-                for (int i = scriptFile.Pointers[messageIndex]; Helpers.IsLessThanNextPointer(scriptFile.Pointers, i, messageIndex, data);)
-                {
-                    if (data[i] == 0x00)
-                    {
-                        scriptFile.Messages[messageIndex].Text += "<00>";
-                        i += 1;
-                    }
-                    else if (data[i] == 0xFF) // opcode
-                    {
-                        (string op, int bytes) = GetFFOp(new byte[] { data[i + 1], data[i + 2] },
-                            new FileFormatException($"Unknown 0xFF opcode 0x{data[i + 1]:X2} encountered at position 0x{i + 1:X2}"));
+                byte[] nextDataIntroBytes = data.Skip(scriptFile.Pointers[messageIndex]).Take(2).ToArray();
+                byte[] nextData = data.Take(Helpers.NextPointer(scriptFile.Pointers, messageIndex, data)).Skip(scriptFile.Pointers[messageIndex] + 2).ToArray();
 
-                        scriptFile.Messages[messageIndex].Text += op;
-                        i += bytes;
-                    }
-                    else if (data[i] == 0xFE)
-                    {
-                        scriptFile.Messages[messageIndex].Text += $"{FEByteToSpecialCharMap[data[i + 1]]}";
-                        i += 2;
-                    }
-                    else
-                    {
-                        scriptFile.Messages[messageIndex].Text += $"{ByteToCharMap[data[i]]}";
-                        i++;
-                    }
-                }
+                scriptFile.Messages[messageIndex].IntroBytes = ParseBytesToText(nextDataIntroBytes);
+                scriptFile.Messages[messageIndex].Text = ParseBytesToText(nextData);                
             }
 
             return scriptFile;
+        }
+
+        private static string ParseBytesToText(byte[] stringData)
+        {
+            string message = "";
+
+            for (int i = 0; i < stringData.Length;)
+            {
+                if (stringData[i] == 0x00)
+                {
+                    message += "<00>";
+                    i += 1;
+                }
+                else if (stringData[i] == 0xFF) // opcode
+                {
+                    byte[] ffOpData;
+                    if (i + 1 >= stringData.Length)
+                    {
+                        message += "<FF>";
+                        i++;
+                        continue;
+                    }
+                    else if (i + 2 >= stringData.Length)
+                    {
+                        ffOpData = new byte[] { stringData[i + 1], 0x00 };
+                    }
+                    else
+                    {
+                        ffOpData = new byte[] { stringData[i + 1], stringData[i + 2] };
+                    }
+
+                    (string op, int bytes) = GetFFOp(ffOpData, new FileFormatException($"Unknown 0xFF opcode 0x{stringData[i + 1]:X2} encountered at position 0x{i + 1:X2}"));
+
+                    message += op;
+                    i += bytes;
+                }
+                else if (stringData[i] == 0xFE)
+                {
+                    message += $"{FEByteToSpecialCharMap[stringData[i + 1]]}";
+                    i += 2;
+                }
+                else
+                {
+                    message += $"{ByteToCharMap[stringData[i]]}";
+                    i++;
+                }
+            }
+
+            return message;
         }
 
         public static bool CanParse(byte[] data)
@@ -192,7 +220,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             else if (nextTwoBytes[0] == 0x35)
             {
                 // Inserts tab character
-                return ("\t", 2);
+                return ("<tab>", 2);
             }
             else if (nextTwoBytes[0] == 0x36)
             {
@@ -542,30 +570,32 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
     public class Message
     {
+        public string IntroBytes { get; set; }
         public string Text { get; set; }
 
         public byte[] GetBytes()
         {
             var bytes = new List<byte>();
+            string text = IntroBytes + Text;
 
-            for (int i = 0; i < Text.Length; i++)
+            for (int i = 0; i < text.Length; i++)
             {
-                if (Text[i] == '<')
+                if (text[i] == '<')
                 {
-                    string op = string.Concat(Text.Substring(i).TakeWhile(c => c != '>'));
+                    string op = string.Concat(text.Substring(i).TakeWhile(c => c != '>'));
                     switch (op)
                     {
                         case "<00":
-                            bytes.AddRange(new byte[] { 0x00 });
+                            bytes.Add(0x00);
                             break;
                         case "<0xFB":
-                            bytes.AddRange(new byte[] { 0xFB });
+                            bytes.Add(0xFB);
                             break;
                         case "<0xFC":
-                            bytes.AddRange(new byte[] { 0xFC });
+                            bytes.Add(0xFC);
                             break;
                         case "<0xFD":
-                            bytes.AddRange(new byte[] { 0xFD });
+                            bytes.Add(0xFD);
                             break;
                         case "<scroll":
                             bytes.AddRange(new byte[] { 0xFF, 0x01 });
@@ -612,11 +642,17 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         case "<huge":
                             bytes.AddRange(new byte[] { 0xFF, 0x33 });
                             break;
+                        case "<tab":
+                            bytes.AddRange(new byte[] { 0xFF, 0x35 });
+                            break;
                         case "<longtab":
                             bytes.AddRange(new byte[] { 0xFF, 0x36 });
                             break;
                         case "<0x65":
                             bytes.AddRange(new byte[] { 0xFF, 0x65 });
+                            break;
+                        case "<FF":
+                            bytes.Add(0xFF);
                             break;
                         case "<up":
                             bytes.AddRange(new byte[] { 0xFE, 0x00 });
@@ -681,29 +717,25 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
                     i += op.Length;
                 }
-                else if (Text[i] == '\n')
+                else if (text[i] == '\n')
                 {
                     bytes.AddRange(new byte[] { 0xFF, 0x00 });
                 }
-                else if (Text[i] == '\t')
-                {
-                    bytes.AddRange(new byte[] { 0xFF, 0x35 });
-                }
-                else if (Text[i] == '太')
+                else if (text[i] == '太')
                 {
                     bytes.AddRange(new byte[] { 0xFE, 0x0D });
                 }
-                else if (Text[i] == '郎')
+                else if (text[i] == '郎')
                 {
                     bytes.AddRange(new byte[] { 0xFE, 0x0E });
                 }
-                else if (ScriptFile.FEByteToSpecialCharMap.Values.Contains(Text[i].ToString()))
+                else if (ScriptFile.FEByteToSpecialCharMap.Values.Contains(text[i].ToString()))
                 {
-                    bytes.Add(ScriptFile.FEByteToSpecialCharMap.First(c => c.Value == Text[i].ToString()).Key);
+                    bytes.Add(ScriptFile.FEByteToSpecialCharMap.First(c => c.Value == text[i].ToString()).Key);
                 }
                 else
                 {
-                    bytes.Add(ScriptFile.ByteToCharMap.First(c => c.Value == Text[i].ToString()).Key);
+                    bytes.Add(ScriptFile.ByteToCharMap.First(c => c.Value == text[i].ToString()).Key);
                 }
             }
 
@@ -712,7 +744,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         public override string ToString()
         {
-            return Text.Replace("\n", "\\n").Replace("\t", "\\t");
+            return Text.Replace("\n", "\\n");
         }
     }
 }
