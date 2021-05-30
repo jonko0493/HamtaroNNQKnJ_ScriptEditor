@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace HamtaroNNQKnJ_ScriptEditor
 {
-    public class ScriptFile
+    public class MessageFile
     {
         public List<int> Pointers { get; set; } = new List<int>();
         public List<Message> Messages { get; set; } = new List<Message>();
@@ -17,49 +17,49 @@ namespace HamtaroNNQKnJ_ScriptEditor
         public int FileEnd { get; set; } = 0;
         public string FileName { get; set; }
 
-        public static ScriptFile ParseFromFile(string file)
+        public static MessageFile ParseFromFile(string file)
         {
             byte[] data = File.ReadAllBytes(file);
             return ParseFromData(data, Path.GetFileName(file));
         }
 
-        public static ScriptFile ParseFromData(byte[] data, string fileName = "")
+        public static MessageFile ParseFromData(byte[] data, string fileName = "")
         {
             int firstPointer = data.Length;
-            var scriptFile = new ScriptFile { FileName = fileName };
+            var messageFile = new MessageFile { FileName = fileName };
 
             int firstByte = BitConverter.ToInt32(new byte[] { data[0], data[1], data[2], data[3] });
             int secondByte = BitConverter.ToInt32(new byte[] { data[4], data[5], data[6], data[7] });
             if (firstByte == 0x08 && secondByte >= data.Length)
             {
-                scriptFile.FileStart = firstByte;
-                scriptFile.FileEnd = secondByte;
+                messageFile.FileStart = firstByte;
+                messageFile.FileEnd = secondByte;
             }
 
-            for (int i = scriptFile.FileStart; i < data.Length && i < firstPointer; i += 4)
+            for (int i = messageFile.FileStart; i < data.Length && i < firstPointer; i += 4)
             {
                 if (i < firstPointer)
                 {
-                    int pointer = scriptFile.FileStart + BitConverter.ToInt32(new byte[] { data[i], data[i + 1], data[i + 2], data[i + 3] });
-                    if (i == scriptFile.FileStart)
+                    int pointer = messageFile.FileStart + BitConverter.ToInt32(new byte[] { data[i], data[i + 1], data[i + 2], data[i + 3] });
+                    if (i == messageFile.FileStart)
                     {
                         firstPointer = pointer;
                     }
-                    scriptFile.Pointers.Add(pointer);
+                    messageFile.Pointers.Add(pointer);
                 }
             }
 
-            for (int messageIndex = 0; messageIndex < scriptFile.Pointers.Count; messageIndex++)
+            for (int messageIndex = 0; messageIndex < messageFile.Pointers.Count; messageIndex++)
             {
-                scriptFile.Messages.Add(new Message { Text = "" });
-                byte[] nextDataIntroBytes = data.Skip(scriptFile.Pointers[messageIndex]).Take(2).ToArray();
-                byte[] nextData = data.Take(Helpers.NextPointer(scriptFile.Pointers, messageIndex, data)).Skip(scriptFile.Pointers[messageIndex] + 2).ToArray();
+                messageFile.Messages.Add(new Message { Text = "" });
+                byte[] nextDataIntroBytes = data.Skip(messageFile.Pointers[messageIndex]).Take(2).ToArray();
+                byte[] nextData = data.Take(Helpers.NextPointer(messageFile.Pointers, messageIndex, data)).Skip(messageFile.Pointers[messageIndex] + 2).ToArray();
 
-                scriptFile.Messages[messageIndex].IntroBytes = ParseBytesToText(nextDataIntroBytes);
-                scriptFile.Messages[messageIndex].Text = ParseBytesToText(nextData);                
+                messageFile.Messages[messageIndex].IntroBytes = ParseBytesToText(nextDataIntroBytes);
+                messageFile.Messages[messageIndex].Text = ParseBytesToText(nextData);                
             }
 
-            return scriptFile;
+            return messageFile;
         }
 
         private static string ParseBytesToText(byte[] stringData)
@@ -729,13 +729,13 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 {
                     bytes.AddRange(new byte[] { 0xFE, 0x0E });
                 }
-                else if (ScriptFile.FEByteToSpecialCharMap.Values.Contains(text[i].ToString()))
+                else if (MessageFile.FEByteToSpecialCharMap.Values.Contains(text[i].ToString()))
                 {
-                    bytes.Add(ScriptFile.FEByteToSpecialCharMap.First(c => c.Value == text[i].ToString()).Key);
+                    bytes.Add(MessageFile.FEByteToSpecialCharMap.First(c => c.Value == text[i].ToString()).Key);
                 }
                 else
                 {
-                    bytes.Add(ScriptFile.ByteToCharMap.First(c => c.Value == text[i].ToString()).Key);
+                    bytes.Add(MessageFile.ByteToCharMap.First(c => c.Value == text[i].ToString()).Key);
                 }
             }
 

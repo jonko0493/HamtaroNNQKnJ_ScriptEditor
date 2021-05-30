@@ -96,9 +96,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
             File.WriteAllBytes(file, GetBytes());
         }
 
-        public void ReinsertFile(int index, ScriptFile scriptFile)
+        public void ReinsertFile(int index, MessageFile messageFile)
         {
-            FilesInDirectory[index].Content = scriptFile.GetBytes();
+            FilesInDirectory[index].Content = messageFile.GetBytes();
             RecalculatePointers();
         }
 
@@ -125,9 +125,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
         public byte[] Content { get { return _content; } set
             {
                 _content = value;
-                if (ScriptFile.CanParse(Content))
+                if (MessageFile.CanParse(Content))
                 {
-                    FileType = "Script File";
+                    FileType = "Message File";
                 }
                 else
                 {

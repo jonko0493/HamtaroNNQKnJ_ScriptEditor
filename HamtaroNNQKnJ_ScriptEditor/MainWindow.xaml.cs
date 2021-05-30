@@ -23,10 +23,10 @@ namespace HamtaroNNQKnJ_ScriptEditor
     /// </summary>
     public partial class MainWindow : Window
     {
-        private static string BaseWindowTitle = "Hamtaro Q Script Editor";
+        private static string BaseWindowTitle = "Hamtaro Nazo Nazo Q Script Editor";
         private static string AppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HamtaroScriptEditor");
 
-        private ScriptFile _scriptFile { get; set; }
+        private MessageFile _messageFile { get; set; }
         private DirectoryFile _directoryFile { get; set; }
         private int _openDirectoryFileIndex { get; set; } = -1;
         private uint _globalOffset { get; set; }
@@ -43,9 +43,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (mainTabControl.SelectedIndex == 0 && _scriptFile != null) // Messages
+            if (mainTabControl.SelectedIndex == 0 && _messageFile != null) // Messages
             {
-                Title = $"{BaseWindowTitle} - {_scriptFile.FileName}";
+                Title = $"{BaseWindowTitle} - {_messageFile.FileName}";
             }
             else if (mainTabControl.SelectedIndex == 1 && _directoryFile != null) // Directory File
             {
@@ -65,12 +65,12 @@ namespace HamtaroNNQKnJ_ScriptEditor
             };
             if (openFileDialog.ShowDialog() == true)
             {
-                _scriptFile = ScriptFile.ParseFromFile(openFileDialog.FileName);
-                messageListBox.ItemsSource = _scriptFile.Messages;
+                _messageFile = MessageFile.ParseFromFile(openFileDialog.FileName);
+                messageListBox.ItemsSource = _messageFile.Messages;
                 _openDirectoryFileIndex = -1;
                 reinsertMessageButton.IsEnabled = false;
 
-                Title = $"{BaseWindowTitle} - {_scriptFile.FileName}";
+                Title = $"{BaseWindowTitle} - {_messageFile.FileName}";
             }
         }
 
@@ -82,7 +82,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             };
             if (saveFileDialog.ShowDialog() == true)
             {
-                _scriptFile.WriteToFile(saveFileDialog.FileName);
+                _messageFile.WriteToFile(saveFileDialog.FileName);
             }
         }
 
@@ -94,13 +94,13 @@ namespace HamtaroNNQKnJ_ScriptEditor
             };
             if (saveFileDialog.ShowDialog() == true)
             {
-                File.WriteAllLines(saveFileDialog.FileName, _scriptFile.Messages.Select(m => $"{m.Text}\n"));
+                File.WriteAllLines(saveFileDialog.FileName, _messageFile.Messages.Select(m => $"{m.Text}\n"));
             }
         }
 
         private void ReinsertMessageButton_Click(object sender, RoutedEventArgs e)
         {
-            _directoryFile.ReinsertFile(_openDirectoryFileIndex, _scriptFile);
+            _directoryFile.ReinsertFile(_openDirectoryFileIndex, _messageFile);
             mainTabControl.SelectedIndex = 1;
             directoryListBox.Items.Refresh();
         }
@@ -182,13 +182,13 @@ namespace HamtaroNNQKnJ_ScriptEditor
                                 byte.Parse($"{hexText[i + 4]}{hexText[i + 5]}", NumberStyles.HexNumber),
                             };
 
-                            (string op, int bytes) = ScriptFile.GetFFOp(nextTwoBytes, new ArgumentException($"Encountered unknown opcode 0x{hexText[i + 2]}{hexText[i + 3]}"));
+                            (string op, int bytes) = MessageFile.GetFFOp(nextTwoBytes, new ArgumentException($"Encountered unknown opcode 0x{hexText[i + 2]}{hexText[i + 3]}"));
                             hexPreviewTextBlock.Text += op;
                             i += (bytes - 1) * 2;
                         }
                         else
                         {
-                            ScriptFile.ByteToCharMap.TryGetValue(currentByte, out string mappedChar);
+                            MessageFile.ByteToCharMap.TryGetValue(currentByte, out string mappedChar);
                             hexPreviewTextBlock.Text += mappedChar;
                         }
                     }
@@ -271,14 +271,14 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 List<string> text = new List<string>();
 
-                IEnumerable<(int offset, ScriptFile script)> files = _directoryFile.FilesInDirectory
-                    .Where(f => f.FileType == "Script File")
-                    .Select(f => (f.Offset, ScriptFile.ParseFromData(f.Content)));
+                IEnumerable<(int offset, MessageFile messageFile)> files = _directoryFile.FilesInDirectory
+                    .Where(f => f.FileType == "Message File")
+                    .Select(f => (f.Offset, MessageFile.ParseFromData(f.Content)));
                 foreach (var file in files)
                 {
                     text.Add("---------------------------------------------------------------------------------");
                     text.Add($"0x{file.offset:X8}\n");
-                    text.Add(string.Join("\n\n", file.script.Messages.Select(m => m.Text)));
+                    text.Add(string.Join("\n\n", file.messageFile.Messages.Select(m => m.Text)));
                 }
 
                 File.WriteAllLines(saveFileDialog.FileName, text.ToArray());
@@ -337,9 +337,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
         private void OpenInMessageButton_Click(object sender, RoutedEventArgs e)
         {
             var file = (FileInDirectory)directoryListBox.SelectedItem;
-            _scriptFile = ScriptFile.ParseFromData(file.Content);
-            _scriptFile.FileName = $"{_directoryFile.FileName} at 0x{file.Offset:X8}";
-            messageListBox.ItemsSource = _scriptFile.Messages;
+            _messageFile = MessageFile.ParseFromData(file.Content);
+            _messageFile.FileName = $"{_directoryFile.FileName} at 0x{file.Offset:X8}";
+            messageListBox.ItemsSource = _messageFile.Messages;
 
             _openDirectoryFileIndex = directoryListBox.SelectedIndex;
             reinsertMessageButton.IsEnabled = true;

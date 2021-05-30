@@ -40,7 +40,7 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
             byte[] dataOnDisk = File.ReadAllBytes(file);
             DirectoryFile directoryFile = DirectoryFile.ParseFromData(dataOnDisk);
 
-            ScriptFile scriptFile = ScriptFile.ParseFromData(directoryFile.FilesInDirectory[fileIndex].Content);
+            MessageFile scriptFile = MessageFile.ParseFromData(directoryFile.FilesInDirectory[fileIndex].Content);
             directoryFile.ReinsertFile(fileIndex, scriptFile);
 
             byte[] dataInMemory = directoryFile.GetBytes();
@@ -63,11 +63,11 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
                 {
                     string previousReplacement = i == 0 ? textToReplace : replacements[i - 1];
 
-                    ScriptFile scriptFile = ScriptFile.ParseFromData(directoryFile.FilesInDirectory[fileIndex].Content);
+                    MessageFile scriptFile = MessageFile.ParseFromData(directoryFile.FilesInDirectory[fileIndex].Content);
                     scriptFile.Messages[messageIndex].Text = scriptFile.Messages[messageIndex].Text.Replace(previousReplacement, replacements[i]);
                     directoryFile.ReinsertFile(fileIndex, scriptFile);
 
-                    ScriptFile reParseFile = ScriptFile.ParseFromData(directoryFile.FilesInDirectory[fileIndex].Content);
+                    MessageFile reParseFile = MessageFile.ParseFromData(directoryFile.FilesInDirectory[fileIndex].Content);
                 }
                 catch (Exception e)
                 {

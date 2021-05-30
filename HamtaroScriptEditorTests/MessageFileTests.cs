@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace HamtaroNNQKnJ_ScriptEditor.Tests
 {
-    public class ScriptFileTests
+    public class MessageFileTests
     {
         private const string SINGLE_SCRIPT_FILE = ".\\inputs\\SingleScriptFile.dat";
         private const string CUTSCENE_SCRIPT_FILE = ".\\inputs\\CutsceneScriptFile.dat";
@@ -24,9 +24,9 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         public void ParseWriteMatchTest(string file)
         {
             byte[] dataOnDisk = File.ReadAllBytes(file);
-            var scriptFile = ScriptFile.ParseFromData(dataOnDisk);
+            var messageFile = MessageFile.ParseFromData(dataOnDisk);
 
-            byte[] dataInMemory = scriptFile.GetBytes();
+            byte[] dataInMemory = messageFile.GetBytes();
 
             Assert.AreEqual(dataOnDisk, dataInMemory);
         }
@@ -35,11 +35,11 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         public void RecalculatePointersTest()
         {
             byte[] originalData = File.ReadAllBytes(SINGLE_SCRIPT_FILE);
-            var scriptFile = ScriptFile.ParseFromData(originalData);
+            var messageFile = MessageFile.ParseFromData(originalData);
 
-            scriptFile.Messages[2].Text = "<0x0B>Test\nt\nえらんでね!\n<0x0A>";
+            messageFile.Messages[2].Text = "<0x0B>Test\nt\nえらんでね!\n<0x0A>";
 
-            byte[] dataInMemory = scriptFile.GetBytes();
+            byte[] dataInMemory = messageFile.GetBytes();
             byte[] dataOnDisk = File.ReadAllBytes(EDITED_POINTERS_FILE);
 
             Assert.AreEqual(dataOnDisk, dataInMemory);
