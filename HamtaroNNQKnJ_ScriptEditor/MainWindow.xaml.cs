@@ -28,6 +28,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
         private ScriptFile _scriptFile { get; set; }
         private DirectoryFile _directoryFile { get; set; }
         private int _openDirectoryFileIndex { get; set; } = -1;
+        private uint _globalOffset { get; set; }
 
         public MainWindow()
         {
@@ -267,7 +268,33 @@ namespace HamtaroNNQKnJ_ScriptEditor
             if (e.AddedItems.Count > 0)
             {
                 openInMessageButton.IsEnabled = true;
+                directoryFileDetailsStackPanel.Children.Clear();
+
+                var file = (FileInDirectory)directoryListBox.SelectedItem;
+                directoryFileDetailsStackPanel.Children.Add(new TextBlock
+                {
+                    Text = $"Start Offset:\t0x{file.Offset + _globalOffset:X8}"
+                });
+                directoryFileDetailsStackPanel.Children.Add(new TextBlock
+                {
+                    Text = $"End Offset:\t0x{file.Offset + file.Content.Length - 1 + _globalOffset:X8}"
+                });
+
+                var fileTextBox = new FileTextBox
+                {
+                    File = file,
+                    Text = file.Notes,
+                };
+                fileTextBox.TextChanged += FileTextBox_TextChanged;
+                directoryFileDetailsStackPanel.Children.Add(fileTextBox);
             }
+        }
+
+        private void FileTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var textBox = (FileTextBox)sender;
+            textBox.File.Notes = textBox.Text;
+            directoryListBox.Items.Refresh();
         }
 
         private void OpenInMessageButton_Click(object sender, RoutedEventArgs e)
@@ -281,6 +308,18 @@ namespace HamtaroNNQKnJ_ScriptEditor
             reinsertMessageButton.IsEnabled = true;
 
             mainTabControl.SelectedIndex = 0;
+        }
+
+        private void GlobalOffsetTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (uint.TryParse(globalOffsetTextBox.Text, NumberStyles.HexNumber, null, out uint globalOffset))
+            {
+                _globalOffset = globalOffset;
+            }
+            else
+            {
+                _globalOffset = 0;
+            }
         }
     }
 }

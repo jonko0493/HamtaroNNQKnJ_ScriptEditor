@@ -11,4 +11,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
     {
         public Message Message { get; set; }
     }
+
+    public class FileTextBox : TextBox
+    {
+        public FileInDirectory File { get; set; }
+    }
 }

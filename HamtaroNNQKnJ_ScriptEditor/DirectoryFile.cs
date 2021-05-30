@@ -136,10 +136,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
         }
         public string FileType { get; private set; }
+        public string Notes { get; set; }
 
         public override string ToString()
         {
-            return $"Offset: 0x{Offset:X4}\tSize: {_content.Length} bytes\t{FileType}";
+            return $"Offset: 0x{Offset:X4}\tSize: {_content.Length} bytes\t{FileType}\t{Notes}";
         }
     }
 }
