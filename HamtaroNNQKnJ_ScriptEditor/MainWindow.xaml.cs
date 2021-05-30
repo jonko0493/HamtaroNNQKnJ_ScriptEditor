@@ -295,6 +295,10 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 var file = (FileInDirectory)directoryListBox.SelectedItem;
                 directoryFileDetailsStackPanel.Children.Add(new TextBlock
                 {
+                    Text = $"{_directoryFile.FilesInDirectory.IndexOf(file):d4}"
+                });
+                directoryFileDetailsStackPanel.Children.Add(new TextBlock
+                {
                     Text = $"Start Offset:\t0x{file.Offset + _globalOffset:X8}"
                 });
                 directoryFileDetailsStackPanel.Children.Add(new TextBlock
