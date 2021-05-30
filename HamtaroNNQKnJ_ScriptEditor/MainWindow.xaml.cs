@@ -24,6 +24,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
     public partial class MainWindow : Window
     {
         private static string BaseWindowTitle = "Hamtaro Q Script Editor";
+        private static string AppDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HamtaroScriptEditor");
 
         private ScriptFile _scriptFile { get; set; }
         private DirectoryFile _directoryFile { get; set; }
@@ -34,6 +35,10 @@ namespace HamtaroNNQKnJ_ScriptEditor
         {
             InitializeComponent();
             Title = BaseWindowTitle;
+            if (!Directory.Exists(AppDataPath))
+            {
+                Directory.CreateDirectory(AppDataPath);
+            }
         }
 
         private void MainTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -204,6 +209,23 @@ namespace HamtaroNNQKnJ_ScriptEditor
             if (openFileDialog.ShowDialog() == true)
             {
                 _directoryFile = DirectoryFile.ParseFromFile(openFileDialog.FileName);
+                string directoryFileNotesCache = Path.Combine(AppDataPath, $"{_directoryFile.FileName}.info");
+                if (!File.Exists(directoryFileNotesCache))
+                {
+                    using (var notesFile = File.CreateText(directoryFileNotesCache))
+                    {
+                        foreach (FileInDirectory file in _directoryFile.FilesInDirectory)
+                        {
+                            notesFile.WriteLine();
+                        }
+                    }
+                }
+                string[] notes = File.ReadAllLines(directoryFileNotesCache);
+                for (int i = 0; i < notes.Length; i++)
+                {
+                    _directoryFile.FilesInDirectory[i].Notes = notes[i];
+                }
+
                 directoryListBox.ItemsSource = _directoryFile.FilesInDirectory;
                 _openDirectoryFileIndex = -1;
                 reinsertMessageButton.IsEnabled = false;
@@ -287,6 +309,17 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 };
                 fileTextBox.TextChanged += FileTextBox_TextChanged;
                 directoryFileDetailsStackPanel.Children.Add(fileTextBox);
+            }
+            if (e.RemovedItems.Count > 0)
+            {
+                string directoryFileNotesCache = Path.Combine(AppDataPath, $"{_directoryFile.FileName}.info");
+                using (var cacheFile = File.CreateText(directoryFileNotesCache))
+                {
+                    foreach (var f in _directoryFile.FilesInDirectory)
+                    {
+                        cacheFile.WriteLine(f.Notes);
+                    }
+                }
             }
         }
 
