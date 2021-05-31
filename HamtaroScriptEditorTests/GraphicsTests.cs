@@ -17,8 +17,8 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         public void NintendoLogoParseTest()
         {
             var data = File.ReadAllBytes(NINTENDO_LOGO_TILES);
-            var graphics = new GraphicsDriver(data);
-            File.WriteAllBytes("pixels.dat", graphics.Pixels);
+            var graphicsDriver = new GraphicsDriver();
+            File.WriteAllBytes("pixels.dat", graphicsDriver.GetTilePixels(data));
         }
     }
 }
