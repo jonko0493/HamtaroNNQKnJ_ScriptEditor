@@ -7,13 +7,6 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <!--<Menu x:Name="menu" Height="450" VerticalAlignment="Top">
-            <MenuItem x:Name="fileMenuItem" Header="File">
-                <MenuItem x:Name="fileMenuOpen" Header="Open Message File" Click="FileMenuOpen_Click" />
-                <MenuItem x:Name="fileMenuSave" Header="Save Message File" Click="FileMenuSave_Click" />
-                <MenuItem x:Name="fileMenuExtract" Header="Extract Text from Message File" Click="FileMenuExtract_Click" />
-            </MenuItem>
-        </Menu>-->
         <TabControl x:Name="mainTabControl" SelectionChanged="MainTabControl_SelectionChanged">
             <TabItem Header="Messages">
                 <Grid>

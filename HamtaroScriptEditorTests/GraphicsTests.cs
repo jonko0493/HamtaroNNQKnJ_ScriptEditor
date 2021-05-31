@@ -11,14 +11,19 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
 {
     public class GraphicsTests
     {
-        private const string NINTENDO_LOGO_TILES = ".\\inputs\\GraphicsNintendoLogoTiles.dat";
+        private const string NINTENDO_LOGO_COMPRESSED_TILES = ".\\inputs\\GraphicsNintendoLogoCompressedTiles.dat";
+
+        private const string NINTENDO_LOGO_TILES_PIXEL_DATA = ".\\inputs\\GraphicsNintendoLogoTilePixels.dat";
 
         [Test]
-        public void NintendoLogoParseTest()
+        public void NintendoLogoParsePixelsTest()
         {
-            var data = File.ReadAllBytes(NINTENDO_LOGO_TILES);
+            var compressedData = File.ReadAllBytes(NINTENDO_LOGO_COMPRESSED_TILES);
             var graphicsDriver = new GraphicsDriver();
-            File.WriteAllBytes("pixels.dat", graphicsDriver.GetTilePixels(data));
+            var pixelDataInMemory = graphicsDriver.GetTilePixels(compressedData);
+
+            var pixelDataOnDisk = File.ReadAllBytes(NINTENDO_LOGO_TILES_PIXEL_DATA);
+            Assert.AreEqual(pixelDataOnDisk, pixelDataInMemory);
         }
     }
 }
