@@ -125,6 +125,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
         public byte[] Content { get { return _content; } set
             {
                 _content = value;
+                
                 if (MessageFile.CanParse(Content))
                 {
                     FileType = "Message File";

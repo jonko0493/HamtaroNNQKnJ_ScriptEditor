@@ -9,7 +9,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
     public class GraphicsDriver
     {
         private int currentByte = 0; // r0
-        private int a; // r1, current pixel address
+        private uint a; // r1, current pixel address
         private int b; // r2
         private int c; // r3
         private int d; // r4
@@ -28,6 +28,29 @@ namespace HamtaroNNQKnJ_ScriptEditor
         private byte[] pixels { get; set; }
 
         public byte[] GetTilePixels(byte[] compressedData)
+        {
+
+            data = compressedData;
+            currentByte = 0;
+            a = 0;
+            b = 0;
+            c = 0;
+            d = 0;
+            e = 0;
+            f = 0;
+            g = 0;
+            h = 0;
+            j = 0;
+            k = 0;
+            l = 0x020722EC;
+            m = 0x027E3A9C;
+            n = 0x020747DC;
+
+            DecompressTiles();
+            return pixels;
+        }
+
+        public byte[] GetTilePixelsUsingCrudeASMSimulator(byte[] compressedData)
         {
             data = compressedData;
             currentByte = 0;
@@ -49,6 +72,84 @@ namespace HamtaroNNQKnJ_ScriptEditor
             return pixels;
         }
 
+        private void DecompressTiles()
+        {
+            h = BitConverter.ToInt32(data.Take(4).ToArray());
+            j = h >> 8;
+            pixels = new byte[j];
+            currentByte += 4;
+
+            while (j > 0)
+            {
+                f = data[currentByte++];
+                for (g = 7; g >= 0; g--)
+                {
+                    if ((f & 0x80) != 0)                            // tst      r6,80h
+                    {
+                        i = data[currentByte];                              // ldrb     r9,[r0]
+                        e = 3 + (i >> 4);                                   // add      r5,r8,r9,asr 4h
+                        i = data[currentByte];
+                        currentByte++;                                      // ldrb     r9,[r0],1h
+                        h = i & 0x0F;                                       // and      r8,r9,0Fh
+                        d = h << 8;                                         // mov      r4,r8,lsl 8h
+                        i = data[currentByte];
+                        currentByte++;                                      // ldrb     r9,[r0],1h
+                        h = i | d;                                          // orr      r8,r9,r4
+                        d = h + 1;                                          // add      r4,r8,1h
+                        h = 8 - b;                                          // rsb      r8,r2,8h
+                        i = d & 1;                                          // and      r9,r4,1h
+                        n = h ^ (i << 3);                                   // eor      r14,r8,r9,lsl 3h
+                        j -= e;                                             // sub      r10,r10,r5
+                        while (e > 0)
+                        {
+                            n ^= 8;                                             // eor      r14,r14,8h
+                            h = 8 - b;                                          // rsb      r8,r2,8h
+                            h = d + (h >> 3);                                   // add      r8,r4,r8,lsr 3h
+                            h >>= 1;                                         // mov      r8,r8,lsr 1h
+                            h <<= 1;                                         // mov      r8,r8,lsl 1h
+                            i = BitConverter.ToUInt16(
+                                new byte[] { pixels[a - h],
+                                pixels[a - h + 1] });                           // ldrh     r9,[r1,-r8]
+                            h = 0xFF;                                           // mov      r8,0FFh
+                            h = i & (h << n);                                   // and      r8,r9,r8,lsl r14
+                            h >>= n;                                         // mov      r8,r8,asr r14
+                            c |= (h << b);                                   // orr      r3,r3,r8,lsl r2
+                            b ^= 8;                                             // eors     r2,r2,8h
+                            if (b == 0)
+                            {
+                                var cBytes = BitConverter.GetBytes((short)c);
+                                pixels[a] = cBytes[0];
+                                pixels[a + 1] = cBytes[1];
+                                a += 2;                                         // strheq   r3,[r1],2h
+                                c = 0;                                          // mov      r3,0h
+                            }
+                            e--;                                                // subs     r5,r5,1h
+                        }
+                        f <<= 1;
+                    }
+                    else
+                    {
+                        if (currentByte < data.Length)
+                        {
+                            i = data[currentByte++];                              
+                        c |= (i << b);                              
+                        j--;                                       
+                        b ^= 8;
+                        if (b == 0 && a < pixels.Length - 1)
+                        {
+                            var cBytes = BitConverter.GetBytes((short)c);
+                            pixels[a] = cBytes[0];
+                            pixels[a + 1] = cBytes[1];
+                            a += 2;
+                            c = 0;
+                        }
+                        f <<= 1;
+                        }
+                    }
+                }
+            }
+        }
+
         #region Tile_ASM
         private void Lxx_020747D8()
         {
@@ -64,7 +165,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
         {
             if (j <= 0)                                         // cmp      r10,0h
             {
-                Lxx_020748A0();                                 // ble      Lxx_20748A0h
+                // complete                                     // ble      Lxx_20748A0h
             }
             else
             {
@@ -77,7 +178,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         private void Lxx_020747F4()
         {
-            g -= 1;                                             // subs     r7,r7,1h
+            g--;                                                // subs     r7,r7,1h
             if (g < 0)
             {
                 Lxx_020747E4();                                 // blt      Lxx_20747E4h
@@ -181,11 +282,6 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 Lxx_020747E4();                                 // b        Lxx_20747E4h
             }
-        }
-
-        private void Lxx_020748A0()
-        {
-
         }
         #endregion
     }
