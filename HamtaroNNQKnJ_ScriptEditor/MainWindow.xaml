@@ -42,11 +42,13 @@
                         </ToolBar>
                     </ToolBarTray>
                     <ListBox x:Name="directoryListBox" Margin="0,30,219,0" SelectionChanged="DirectoryListBox_SelectionChanged" />
-                    <StackPanel Orientation="Horizontal" Margin="588,32,12,354">
-                        <TextBlock TextAlignment="Right" Margin="0,2,0,0">Global Offset: 0x</TextBlock>
-                        <TextBox x:Name="globalOffsetTextBox" Width="100" Text="00000000" TextChanged="GlobalOffsetTextBox_TextChanged" />
+                    <StackPanel Margin="580,30,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock TextAlignment="Right" Margin="0,2,0,0">Global Offset: 0x</TextBlock>
+                            <TextBox x:Name="globalOffsetTextBox" Width="100" Text="00000000" TextChanged="GlobalOffsetTextBox_TextChanged" />
+                        </StackPanel>
+                        <StackPanel x:Name="directoryFileDetailsStackPanel"  />
                     </StackPanel>
-                    <StackPanel x:Name="directoryFileDetailsStackPanel" Margin="580,57,0,0" />
                 </Grid>
             </TabItem>
             <TabItem Header="Hex Editor">

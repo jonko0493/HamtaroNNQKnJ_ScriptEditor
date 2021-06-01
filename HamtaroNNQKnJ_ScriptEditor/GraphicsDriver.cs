@@ -26,8 +26,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         private byte[] data { get; set; }
         private byte[] pixels { get; set; }
+        private List<byte> _pixels { get; set; }
 
-        public byte[] GetTilePixelsUsingCrudeASMSimulator(byte[] compressedData)
+        public byte[] GetBgTilePixelsUsingCrudeASMSimulator(byte[] compressedData)
         {
             data = compressedData;
             z = 0;
@@ -49,7 +50,31 @@ namespace HamtaroNNQKnJ_ScriptEditor
             return pixels;
         }
 
-        public static byte[] DecompressTiles(byte[] data)
+        public byte[] GetSpriteTilePixelsUsingCrudeASMSimulator(byte[] compressedData)
+        {
+            data = compressedData;
+            z = 0x020C9A94;
+            a = 0x020C9ABC;
+            b = 0;
+            c = 0;
+            d = 0x20C9A8C;
+            e = 0x0C;
+            f = 0x02066520;
+            g = 5; // byte counter
+            h = 0; // pixel counter;
+            i = 0x020C95E0;
+            j = 0x020D0D94;
+            k = 0;
+            l = 0;
+            m = 0x027E3A48;
+            n = 0x020666C8;
+
+            _pixels = new List<byte>();
+            Lxx_020664A0();
+            return _pixels.ToArray();
+        }
+
+        public static byte[] DecompressBgTiles(byte[] data)
         {
             int decompressedLength = BitConverter.ToInt32(data.Take(4).ToArray()) >> 8;
             byte[] pixels = new byte[decompressedLength];
@@ -70,6 +95,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         currentByte += 2;
                         int xoredTwoBytes = (8 - eightSwitch) ^ ((combinedTwoBytes & 1) << 3);
                         decompressedLength -= bytesToDecompress;
+
                         for (; bytesToDecompress > 0; bytesToDecompress--)
                         {
                             xoredTwoBytes ^= 8;
@@ -115,7 +141,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             return pixels;
         }
 
-        #region Tile_ASM
+        #region BG_Tile_ASM
         private void Lxx_020747D8()
         {
             h = BitConverter.ToInt32(data.Take(4).ToArray());   // ldr      r8,[r0],4h
@@ -246,6 +272,95 @@ namespace HamtaroNNQKnJ_ScriptEditor
             else
             {
                 Lxx_020747E4();                                 // b        Lxx_20747E4h
+            }
+        }
+        #endregion
+
+        #region Sprite_Tile_ASM
+        public void Lxx_020664A0()
+        {
+            b >>= 2;                    // mov      r2,r2,lsr 2h
+            if ((b & 0x100) == 0)       // tst      r2,100h
+            {
+                l = data[g++];          // ldrbeq   r12,[r7],1h
+                b = l | 0xFF00;         // orreq    r2,r12,0FF00h
+            }
+            c = e & (b << 2);           // and      r3,r5,r2,lsl 2h
+            switch (c)                  // ldr      r15,[r6,r3]
+            {
+                case 0x0:
+                    break;
+
+                case 0x4:
+                    Lxx_020664C8();
+                    break;
+
+                case 0x8:
+                    Lxx_020664D4();
+                    break;
+
+                case 0xC:
+                    Lxx_02066504();
+                    break;
+
+                default:
+                    throw new IndexOutOfRangeException($"Unexpected index {c} encountered");
+            }
+        }
+
+        public void Lxx_020664C8()
+        {
+            l = data[g++];              // ldrb     r12,[r7],1h
+            _pixels.Add((byte)l);       // strb     r12,[r8],1h
+            Lxx_020664A0();             // b        Lxx_20664A0h;
+        }
+
+        public void Lxx_020664D4()
+        {
+            c = data[g++];              // ldrb     r3,[r7],1h
+            d = data[g++];              // ldrb     r4,[r8],1h
+            l = d & 0xF0;               // and      r12,r4,0F0h
+            c |= (l << 4);              // orr      r3,r3,r12,lsl 4h
+            l = d - l;                  // sub      r12,r4,r12
+            d = l + 2;                  // add      r4,r12,2h
+            c = (_pixels.Count) - c;    // sub      r3,r8,r3        // h is current index
+            Lxx_020664F0();
+        }
+
+        public void Lxx_020664F0()
+        {
+            l = data[c++];              // ldrb     r12,[r3],1h
+            _pixels.Add((byte)l);       // strb     r12,[r8],1h
+            d--;
+            if (d != 0)                 // subs     r4,r4,1h
+            {
+                Lxx_020664F0();         // bne      Lxx_20664F0h
+            }
+            else
+            {
+                Lxx_020664A0();         // b        Lxx_20664A0h
+            }
+        }
+
+        public void Lxx_02066504()
+        {
+            c = data[g++];              // ldrb     r3,[r7],1h
+            l = data[g++];              // ldrb     r12,[r7],1h
+            c += 2;                     // add      r3,r3,2h
+            Lxx_02066510();
+        }
+
+        public void Lxx_02066510()
+        {
+            _pixels.Add((byte)l);       // strb     r12,[r8],1h
+            c--;
+            if (c != 0)                 // subs     r3,r3,1h
+            {
+                Lxx_02066510();         // bne      Lxx_2066510h
+            }
+            else
+            {
+                Lxx_020664A0();         // b        Lxx_20664A0h
             }
         }
         #endregion

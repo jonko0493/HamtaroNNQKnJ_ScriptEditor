@@ -18,7 +18,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 CompressedData = data,
             };
-            tileFile.PixelData = GraphicsDriver.DecompressTiles(data);
+            tileFile.PixelData = GraphicsDriver.DecompressBgTiles(data);
             return tileFile;
         }
 
