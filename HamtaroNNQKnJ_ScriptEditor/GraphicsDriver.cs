@@ -8,7 +8,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
 {
     public class GraphicsDriver
     {
-        private int currentByte = 0; // r0
+        private int z = 0; // r0
         private uint a; // r1, current pixel address
         private int b; // r2
         private int c; // r3
@@ -27,33 +27,10 @@ namespace HamtaroNNQKnJ_ScriptEditor
         private byte[] data { get; set; }
         private byte[] pixels { get; set; }
 
-        public byte[] GetTilePixels(byte[] compressedData)
-        {
-
-            data = compressedData;
-            currentByte = 0;
-            a = 0;
-            b = 0;
-            c = 0;
-            d = 0;
-            e = 0;
-            f = 0;
-            g = 0;
-            h = 0;
-            j = 0;
-            k = 0;
-            l = 0x020722EC;
-            m = 0x027E3A9C;
-            n = 0x020747DC;
-
-            DecompressTiles();
-            return pixels;
-        }
-
         public byte[] GetTilePixelsUsingCrudeASMSimulator(byte[] compressedData)
         {
             data = compressedData;
-            currentByte = 0;
+            z = 0;
             a = 0;
             b = 1;
             c = 0;
@@ -72,89 +49,77 @@ namespace HamtaroNNQKnJ_ScriptEditor
             return pixels;
         }
 
-        private void DecompressTiles()
+        public static byte[] DecompressTiles(byte[] data)
         {
-            h = BitConverter.ToInt32(data.Take(4).ToArray());
-            j = h >> 8;
-            pixels = new byte[j];
-            currentByte += 4;
+            int decompressedLength = BitConverter.ToInt32(data.Take(4).ToArray()) >> 8;
+            byte[] pixels = new byte[decompressedLength];
+            int currentByte = 4;
+            int currentPixel = 0;
+            int pixelDataHolder = 0;
+            int eightSwitch = 0;
 
-            while (j > 0)
+            while (decompressedLength > 0)
             {
-                f = data[currentByte++];
-                for (g = 7; g >= 0; g--)
+                int bitwiseChecker = data[currentByte++];
+                for (int bytesInDword = 7; bytesInDword >= 0; bytesInDword--)
                 {
-                    if ((f & 0x80) != 0)                            // tst      r6,80h
+                    if ((bitwiseChecker & 0x80) != 0)
                     {
-                        i = data[currentByte];                              // ldrb     r9,[r0]
-                        e = 3 + (i >> 4);                                   // add      r5,r8,r9,asr 4h
-                        i = data[currentByte];
-                        currentByte++;                                      // ldrb     r9,[r0],1h
-                        h = i & 0x0F;                                       // and      r8,r9,0Fh
-                        d = h << 8;                                         // mov      r4,r8,lsl 8h
-                        i = data[currentByte];
-                        currentByte++;                                      // ldrb     r9,[r0],1h
-                        h = i | d;                                          // orr      r8,r9,r4
-                        d = h + 1;                                          // add      r4,r8,1h
-                        h = 8 - b;                                          // rsb      r8,r2,8h
-                        i = d & 1;                                          // and      r9,r4,1h
-                        n = h ^ (i << 3);                                   // eor      r14,r8,r9,lsl 3h
-                        j -= e;                                             // sub      r10,r10,r5
-                        while (e > 0)
+                        int bytesToDecompress = 3 + (data[currentByte] >> 4);
+                        int combinedTwoBytes = ((data[currentByte] & 0x0F) << 8 | data[currentByte + 1]) + 1;
+                        currentByte += 2;
+                        int xoredTwoBytes = (8 - eightSwitch) ^ ((combinedTwoBytes & 1) << 3);
+                        decompressedLength -= bytesToDecompress;
+                        for (; bytesToDecompress > 0; bytesToDecompress--)
                         {
-                            n ^= 8;                                             // eor      r14,r14,8h
-                            h = 8 - b;                                          // rsb      r8,r2,8h
-                            h = d + (h >> 3);                                   // add      r8,r4,r8,lsr 3h
-                            h >>= 1;                                         // mov      r8,r8,lsr 1h
-                            h <<= 1;                                         // mov      r8,r8,lsl 1h
-                            i = BitConverter.ToUInt16(
-                                new byte[] { pixels[a - h],
-                                pixels[a - h + 1] });                           // ldrh     r9,[r1,-r8]
-                            h = 0xFF;                                           // mov      r8,0FFh
-                            h = i & (h << n);                                   // and      r8,r9,r8,lsl r14
-                            h >>= n;                                         // mov      r8,r8,asr r14
-                            c |= (h << b);                                   // orr      r3,r3,r8,lsl r2
-                            b ^= 8;                                             // eors     r2,r2,8h
-                            if (b == 0)
+                            xoredTwoBytes ^= 8;
+                            int previousPixelOffset = ((combinedTwoBytes + (8 - eightSwitch >> 3)) >> 1) << 1;
+
+                            ushort previousPixels = BitConverter.ToUInt16(
+                                new byte[] { pixels[currentPixel - previousPixelOffset],
+                                pixels[currentPixel - previousPixelOffset + 1] });
+
+                            pixelDataHolder |= ((previousPixels & (0xFF << xoredTwoBytes)) >> xoredTwoBytes) << eightSwitch;
+                            eightSwitch ^= 8;
+                            if (eightSwitch == 0)
                             {
-                                var cBytes = BitConverter.GetBytes((short)c);
-                                pixels[a] = cBytes[0];
-                                pixels[a + 1] = cBytes[1];
-                                a += 2;                                         // strheq   r3,[r1],2h
-                                c = 0;                                          // mov      r3,0h
+                                var cBytes = BitConverter.GetBytes((short)pixelDataHolder);
+                                pixels[currentPixel] = cBytes[0];
+                                pixels[currentPixel + 1] = cBytes[1];
+                                currentPixel += 2;
+                                pixelDataHolder = 0;
                             }
-                            e--;                                                // subs     r5,r5,1h
                         }
-                        f <<= 1;
                     }
                     else
                     {
                         if (currentByte < data.Length)
                         {
-                            i = data[currentByte++];                              
-                        c |= (i << b);                              
-                        j--;                                       
-                        b ^= 8;
-                        if (b == 0 && a < pixels.Length - 1)
-                        {
-                            var cBytes = BitConverter.GetBytes((short)c);
-                            pixels[a] = cBytes[0];
-                            pixels[a + 1] = cBytes[1];
-                            a += 2;
-                            c = 0;
-                        }
-                        f <<= 1;
+                            pixelDataHolder |= (data[currentByte++] << eightSwitch);
+                            decompressedLength--;
+                            eightSwitch ^= 8;
+                            if (eightSwitch == 0 && currentPixel < pixels.Length - 1)
+                            {
+                                var cBytes = BitConverter.GetBytes((short)pixelDataHolder);
+                                pixels[currentPixel] = cBytes[0];
+                                pixels[currentPixel + 1] = cBytes[1];
+                                currentPixel += 2;
+                                pixelDataHolder = 0;
+                            }
                         }
                     }
+                    bitwiseChecker <<= 1;
                 }
             }
+
+            return pixels;
         }
 
         #region Tile_ASM
         private void Lxx_020747D8()
         {
             h = BitConverter.ToInt32(data.Take(4).ToArray());   // ldr      r8,[r0],4h
-            currentByte += 4;
+            z += 4;
             j = h >> 8;                                         // mov      r10,r8,lsr 8h
             pixels = new byte[j];
             b = 0;                                              // mov      r2,0h
@@ -169,8 +134,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
             else
             {
-                f = data[currentByte];
-                currentByte++;                                  // ldrb     r6,[r0],1h
+                f = data[z];
+                z++;                                  // ldrb     r6,[r0],1h
                 g = 8;                                          // mov      r7,8h
                 Lxx_020747F4();                                 // continuing naturally
             }
@@ -191,8 +156,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 }
                 else
                 {
-                    i = data[currentByte];
-                    currentByte++;                              // ldrb     r9,[r0],1h
+                    i = data[z];
+                    z++;                              // ldrb     r9,[r0],1h
                     c |= (i << b);                              // orr      r3,r3,r9,lsl r2
                     j--;                                        // sub      r10,r10,1h
                     b ^= 8;                                     // eors     r2,r2,8h
@@ -211,15 +176,15 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         private void Lxx_02074820()
         {
-            i = data[currentByte];                              // ldrb     r9,[r0]
+            i = data[z];                              // ldrb     r9,[r0]
             h = 3;                                              // mov      r8,3h
             e = h + (i >> 4);                                   // add      r5,r8,r9,asr 4h
-            i = data[currentByte];
-            currentByte++;                                      // ldrb     r9,[r0],1h
+            i = data[z];
+            z++;                                      // ldrb     r9,[r0],1h
             h = i & 0x0F;                                       // and      r8,r9,0Fh
             d = h << 8;                                         // mov      r4,r8,lsl 8h
-            i = data[currentByte];
-            currentByte++;                                      // ldrb     r9,[r0],1h
+            i = data[z];
+            z++;                                      // ldrb     r9,[r0],1h
             h = i | d;                                          // orr      r8,r9,r4
             d = h + 1;                                          // add      r4,r8,1h
             h = 8 - b;                                          // rsb      r8,r2,8h

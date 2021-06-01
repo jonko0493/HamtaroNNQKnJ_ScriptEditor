@@ -27,8 +27,7 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         public void ParsePixelsTest(string compressedDataFile, string pixelDataFile)
         {
             var compressedData = File.ReadAllBytes(compressedDataFile);
-            var graphicsDriver = new GraphicsDriver();
-            var pixelDataInMemory = graphicsDriver.GetTilePixels(compressedData);
+            var pixelDataInMemory = GraphicsDriver.DecompressTiles(compressedData);
 
             var pixelDataOnDisk = File.ReadAllBytes(pixelDataFile);
             Assert.AreEqual(pixelDataOnDisk, pixelDataInMemory);
@@ -43,10 +42,9 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
             var compressedData = File.ReadAllBytes(compressedDataFile);
 
             var asmGraphicsDriver = new GraphicsDriver();
-            var newGraphicsDriver = new GraphicsDriver();
 
             var asmSimulatorPixelData = asmGraphicsDriver.GetTilePixelsUsingCrudeASMSimulator(compressedData);
-            var newAlgorithmPixelData = newGraphicsDriver.GetTilePixels(compressedData);
+            var newAlgorithmPixelData = GraphicsDriver.DecompressTiles(compressedData);
 
             Assert.AreEqual(newAlgorithmPixelData, asmSimulatorPixelData);
         }
