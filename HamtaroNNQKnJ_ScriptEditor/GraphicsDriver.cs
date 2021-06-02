@@ -329,7 +329,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         public void Lxx_020664F0()
         {
-            l = data[c++];              // ldrb     r12,[r3],1h
+            l = _pixels[c++];              // ldrb     r12,[r3],1h
             _pixels.Add((byte)l);       // strb     r12,[r8],1h
             d--;
             if (d != 0)                 // subs     r4,r4,1h
