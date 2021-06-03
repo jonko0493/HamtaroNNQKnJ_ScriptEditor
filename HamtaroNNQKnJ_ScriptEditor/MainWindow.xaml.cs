@@ -290,7 +290,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
             if (e.AddedItems.Count > 0)
             {
                 openInMessageButton.IsEnabled = true;
-                extractPixelDataFromTilesButton.IsEnabled = true;
+                extractPixelDataFromBgTilesButton.IsEnabled = true;
+                extractPixelDataFromSpriteTilesButton.IsEnabled = true;
                 directoryFileDetailsStackPanel.Children.Clear();
 
                 var file = (FileInDirectory)directoryListBox.SelectedItem;
@@ -348,7 +349,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             mainTabControl.SelectedIndex = 0;
         }
 
-        private void ExtractPixelDataFromTilesButton_Click(object sender, RoutedEventArgs e)
+        private void ExtractPixelDataFromBgTilesButton_Click(object sender, RoutedEventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
@@ -357,7 +358,22 @@ namespace HamtaroNNQKnJ_ScriptEditor
             if (saveFileDialog.ShowDialog() == true)
             {
                 var file = (FileInDirectory)directoryListBox.SelectedItem;
-                var tileFile = TileFile.ParseFromCompressedData(file.Content);
+                var tileFile = TileFile.ParseBGFromCompressedData(file.Content);
+                tileFile.WritePixelsToFile(saveFileDialog.FileName);
+                MessageBox.Show("Extracted successfully!");
+            }
+        }
+
+        private void ExtractPixelDataFromSpriteTilesButton_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "dstile file|*.dstile"
+            };
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                var file = (FileInDirectory)directoryListBox.SelectedItem;
+                var tileFile = TileFile.ParseSpriteFromCompressedData(file.Content);
                 tileFile.WritePixelsToFile(saveFileDialog.FileName);
                 MessageBox.Show("Extracted successfully!");
             }

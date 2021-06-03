@@ -12,13 +12,24 @@ namespace HamtaroNNQKnJ_ScriptEditor
         public byte[] CompressedData { get; set; }
         public byte[] PixelData { get; set; }
 
-        public static TileFile ParseFromCompressedData(byte[] data)
+        public static TileFile ParseBGFromCompressedData(byte[] data)
         {
             var tileFile = new TileFile
             {
                 CompressedData = data,
             };
             tileFile.PixelData = GraphicsDriver.DecompressBgTiles(data);
+            return tileFile;
+        }
+
+        public static TileFile ParseSpriteFromCompressedData(byte[] data)
+        {
+            var tileFile = new TileFile
+            {
+                CompressedData = data,
+            };
+            GraphicsDriver graphicsDriver = new GraphicsDriver();
+            tileFile.PixelData = graphicsDriver.GetSpriteTilePixelsUsingCrudeASMSimulator(data);
             return tileFile;
         }
 
