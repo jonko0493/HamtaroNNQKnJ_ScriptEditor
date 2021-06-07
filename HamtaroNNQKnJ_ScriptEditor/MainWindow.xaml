@@ -38,8 +38,8 @@
                         </ToolBar>
                         <ToolBar x:Name="directorySelectToolBar">
                             <Button x:Name="openInMessageButton" Content="Open in Messages" HorizontalAlignment="Left" IsEnabled="False" Click="OpenInMessageButton_Click" />
-                            <Button x:Name="extractPixelDataFromBgTilesButton" Content="Extract Pixel Data from BG Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="ExtractPixelDataFromBgTilesButton_Click" />
-                            <Button x:Name="extractPixelDataFromSpriteTilesButton" Content="Extract Pixel Data from Sprite Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="ExtractPixelDataFromSpriteTilesButton_Click" />
+                            <Button x:Name="decompressBgTilesButton" Content="Decompress BG Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="DecompressBgTilesButton_Click" />
+                            <Button x:Name="decompressSpriteTilesButton" Content="Decompress Sprite Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="DecompressSpriteTilesButton_Click" />
                         </ToolBar>
                     </ToolBarTray>
                     <ListBox x:Name="directoryListBox" Margin="0,30,219,0" SelectionChanged="DirectoryListBox_SelectionChanged" />

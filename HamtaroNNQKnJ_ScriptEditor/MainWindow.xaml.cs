@@ -290,8 +290,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
             if (e.AddedItems.Count > 0)
             {
                 openInMessageButton.IsEnabled = true;
-                extractPixelDataFromBgTilesButton.IsEnabled = true;
-                extractPixelDataFromSpriteTilesButton.IsEnabled = true;
+                decompressBgTilesButton.IsEnabled = true;
+                decompressSpriteTilesButton.IsEnabled = true;
                 directoryFileDetailsStackPanel.Children.Clear();
 
                 var file = (FileInDirectory)directoryListBox.SelectedItem;
@@ -349,7 +349,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             mainTabControl.SelectedIndex = 0;
         }
 
-        private void ExtractPixelDataFromBgTilesButton_Click(object sender, RoutedEventArgs e)
+        private void DecompressBgTilesButton_Click(object sender, RoutedEventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
@@ -364,7 +364,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
         }
 
-        private void ExtractPixelDataFromSpriteTilesButton_Click(object sender, RoutedEventArgs e)
+        private void DecompressSpriteTilesButton_Click(object sender, RoutedEventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {

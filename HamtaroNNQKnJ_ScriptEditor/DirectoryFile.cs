@@ -130,6 +130,18 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 {
                     FileType = "Background File";
                 }
+                else if (_content.FirstOrDefault() == 0x40 || _content.FirstOrDefault() == 0x60)
+                {
+                    FileType = "Sprite File";
+                }
+                else if (_content.FirstOrDefault() == 0x80 || _content.FirstOrDefault() == 0xA0)
+                {
+                    FileType = "80 or A0 File";
+                }
+                else if (_content.Length == 512 || _content.Length == 128 || _content.Length == 64 || _content.Length == 32)
+                {
+                    FileType = "Palette File";
+                }
                 else if (MessageFile.CanParse(Content))
                 {
                     FileType = "Message File";
