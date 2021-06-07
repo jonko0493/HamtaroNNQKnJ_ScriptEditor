@@ -292,6 +292,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 openInMessageButton.IsEnabled = true;
                 decompressBgTilesButton.IsEnabled = true;
                 decompressSpriteTilesButton.IsEnabled = true;
+                exportPaletteButton.IsEnabled = true;
                 directoryFileDetailsStackPanel.Children.Clear();
 
                 var file = (FileInDirectory)directoryListBox.SelectedItem;
@@ -388,6 +389,21 @@ namespace HamtaroNNQKnJ_ScriptEditor
             else
             {
                 _globalOffset = 0;
+            }
+        }
+
+        private void ExportPaletteButton_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                Filter = "RIFF Palette file|*.pal"
+            };
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                var file = (FileInDirectory)directoryListBox.SelectedItem;
+                var paletteFile = PaletteFile.ParseFromData(file.Content);
+                paletteFile.WriteRiffPaletteFile(saveFileDialog.FileName);
+                MessageBox.Show("Extracted successfully!");
             }
         }
     }

@@ -26,6 +26,12 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         private const string HAJIMERU_SPRITE_COMPRESSED_TILES = ".\\inputs\\GraphicsHajimeruSpriteCompressedTiles.dat";
         private const string HAJIMERU_SPRITE_TILES_PIXEL_DATA = ".\\inputs\\GraphicsHajimeruSpriteTilePixels.dstile";
 
+        private const string BUTTONS_PALETTE_DATA = ".\\inputs\\PaletteButtons.dat";
+        private const string BUTTONS_PALETTE_RIFF = ".\\inputs\\PaletteButtons.pal";
+
+        private const string HAMTARO_PALETTE_DATA = ".\\inputs\\PaletteHamtaro.dat";
+        private const string HAMTARO_PALETTE_RIFF = ".\\inputs\\PaletteHamtaro.pal";
+
         [Test]
         [TestCase(NINTENDO_LOGO_COMPRESSED_TILES, NINTENDO_LOGO_TILES_PIXEL_DATA)]
         [TestCase(ALPHA_DREAM_LOGO_COMPRESSED_TILES, ALPHA_DREAM_LOGO_TILES_PIXEL_DATA)]
@@ -83,6 +89,20 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
             var newAlgorithmPixelData = newGraphicsDriver.DecompressSpriteTiles(compressedData);
 
             Assert.AreEqual(newAlgorithmPixelData, asmSimulatorPixelData);
+        }
+
+        [Test]
+        [TestCase(BUTTONS_PALETTE_DATA, BUTTONS_PALETTE_RIFF)]
+        [TestCase(HAMTARO_PALETTE_DATA, HAMTARO_PALETTE_RIFF)]
+        public void PaletteConversionTest(string paletteDataFile, string paletteRiffFile)
+        {
+            var paletteData = File.ReadAllBytes(paletteDataFile);
+            var paletteRiffOnDisk = File.ReadAllBytes(paletteRiffFile);
+
+            PaletteFile paletteFile = PaletteFile.ParseFromData(paletteData);
+            var paletteRiffInMemory = paletteFile.GetRiffPaletteBytes();
+
+            Assert.AreEqual(paletteRiffOnDisk, paletteRiffInMemory);
         }
     }
 }

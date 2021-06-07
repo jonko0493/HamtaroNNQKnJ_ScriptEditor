@@ -40,6 +40,8 @@
                             <Button x:Name="openInMessageButton" Content="Open in Messages" HorizontalAlignment="Left" IsEnabled="False" Click="OpenInMessageButton_Click" />
                             <Button x:Name="decompressBgTilesButton" Content="Decompress BG Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="DecompressBgTilesButton_Click" />
                             <Button x:Name="decompressSpriteTilesButton" Content="Decompress Sprite Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="DecompressSpriteTilesButton_Click" />
+                            <Button x:Name="exportPaletteButton" Content="Export Palette" HorizontalAlignment="Left" IsEnabled="False" Click="ExportPaletteButton_Click" />
+
                         </ToolBar>
                     </ToolBarTray>
                     <ListBox x:Name="directoryListBox" Margin="0,30,219,0" SelectionChanged="DirectoryListBox_SelectionChanged" />
