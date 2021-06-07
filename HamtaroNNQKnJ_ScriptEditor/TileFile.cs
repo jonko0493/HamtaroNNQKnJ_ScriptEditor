@@ -29,7 +29,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 CompressedData = data,
             };
             GraphicsDriver graphicsDriver = new GraphicsDriver();
-            tileFile.PixelData = graphicsDriver.GetSpriteTilePixelsUsingCrudeASMSimulator(data);
+            tileFile.PixelData = graphicsDriver.DecompressSpriteTiles(data);
             return tileFile;
         }
 

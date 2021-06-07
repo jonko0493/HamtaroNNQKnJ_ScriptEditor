@@ -20,8 +20,11 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         private const string COPYRIGHT_SCREEN_COMPRESSED_TILES = ".\\inputs\\GraphicsCopyrightScreenCompressedTiles.dat";
         private const string COPYRIGHT_SCREEN_TILES_PIXEL_DATA = ".\\inputs\\GraphicsCopyrightScreenTilePixels.dstile";
 
-        private const string ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES = ".\\inputs\\GraphicsAlphaDreamLogoSpriteTiles.dat";
-        private const string HAJIMERU_SPRITE_COMPRESSED_TILES = ".\\inputs\\GraphicsHajimeruSpriteTiles.dat";
+        private const string ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES = ".\\inputs\\GraphicsAlphaDreamLogoSpriteCompressedTiles.dat";
+        private const string ALPHA_DREAM_LOGO_SPRITE_TILES_PIXEL_DATA = ".\\inputs\\GraphicsAlphaDreamLogoSpriteTilePixels.dstile";
+
+        private const string HAJIMERU_SPRITE_COMPRESSED_TILES = ".\\inputs\\GraphicsHajimeruSpriteCompressedTiles.dat";
+        private const string HAJIMERU_SPRITE_TILES_PIXEL_DATA = ".\\inputs\\GraphicsHajimeruSpriteTilePixels.dstile";
 
         [Test]
         [TestCase(NINTENDO_LOGO_COMPRESSED_TILES, NINTENDO_LOGO_TILES_PIXEL_DATA)]
@@ -40,7 +43,7 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         [TestCase(NINTENDO_LOGO_COMPRESSED_TILES, NINTENDO_LOGO_TILES_PIXEL_DATA)]
         [TestCase(ALPHA_DREAM_LOGO_COMPRESSED_TILES, ALPHA_DREAM_LOGO_TILES_PIXEL_DATA)]
         [TestCase(COPYRIGHT_SCREEN_COMPRESSED_TILES, COPYRIGHT_SCREEN_TILES_PIXEL_DATA)]
-        public void NewDecompressionAlgorithmTest(string compressedDataFile, string pixelDataFile)
+        public void NewBgDecompressionAlgorithmTest(string compressedDataFile, string pixelDataFile)
         {
             var compressedData = File.ReadAllBytes(compressedDataFile);
 
@@ -53,16 +56,33 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         }
 
         [Test]
-        [TestCase(ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES, "")]
-        [TestCase(HAJIMERU_SPRITE_COMPRESSED_TILES, "")]
+        [TestCase(ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES, ALPHA_DREAM_LOGO_SPRITE_TILES_PIXEL_DATA)]
+        [TestCase(HAJIMERU_SPRITE_COMPRESSED_TILES, HAJIMERU_SPRITE_TILES_PIXEL_DATA)]
         public void ParseSpritePixelsTest(string compressedDataFile, string pixelDataFile)
         {
             var compressedData = File.ReadAllBytes(compressedDataFile);
 
             var asmGraphicsDriver = new GraphicsDriver();
+            var pixelDataInMemory = asmGraphicsDriver.GetSpriteTilePixelsUsingCrudeASMSimulator(compressedData);
+
+            var pixelDataOnDisk = File.ReadAllBytes(pixelDataFile);
+            Assert.AreEqual(pixelDataOnDisk, pixelDataInMemory);
+        }
+
+        [Test]
+        [TestCase(ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES, ALPHA_DREAM_LOGO_SPRITE_TILES_PIXEL_DATA)]
+        [TestCase(HAJIMERU_SPRITE_COMPRESSED_TILES, HAJIMERU_SPRITE_TILES_PIXEL_DATA)]
+        public void NewSpriteDecompressionAlgorithmTest(string compressedDataFile, string pixelDataFile)
+        {
+            var compressedData = File.ReadAllBytes(compressedDataFile);
+
+            var asmGraphicsDriver = new GraphicsDriver();
+            var newGraphicsDriver = new GraphicsDriver();
 
             var asmSimulatorPixelData = asmGraphicsDriver.GetSpriteTilePixelsUsingCrudeASMSimulator(compressedData);
-            File.WriteAllBytes("pixels.dstile", asmSimulatorPixelData);
+            var newAlgorithmPixelData = newGraphicsDriver.DecompressSpriteTiles(compressedData);
+
+            Assert.AreEqual(newAlgorithmPixelData, asmSimulatorPixelData);
         }
     }
 }

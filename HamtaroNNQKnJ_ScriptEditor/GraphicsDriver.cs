@@ -144,6 +144,96 @@ namespace HamtaroNNQKnJ_ScriptEditor
             return pixels;
         }
 
+        public byte[] DecompressSpriteTiles(byte[] compressedData)
+        {
+            data = compressedData;
+            _pixels = new List<byte>();
+            globalByteIndex = 3;
+            bool areBlocksRemaining = true;
+
+            while (globalByteIndex + 1 < data.Length && areBlocksRemaining)
+            {
+                if (data[globalByteIndex] == 0x60)
+                {
+                    globalByteIndex += 2;
+                    _data = data.Skip(globalByteIndex).Take(data.Length - globalByteIndex - 3).ToList();
+                    areBlocksRemaining = false;
+                }
+                else
+                {
+                    short blockLength = BitConverter.ToInt16(new byte[] { data[globalByteIndex], data[globalByteIndex + 1] });
+                    globalByteIndex += 2;
+
+                    _data = data.Skip(globalByteIndex).Take(blockLength).ToList();
+                    _data.AddRange(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 });
+                    globalByteIndex += blockLength;
+                }
+
+                b = 0x00;
+                e = 0x0C;
+                g = 0;
+                bool dataInBlockRemaining = true;
+
+                while (dataInBlockRemaining)
+                {
+                    b >>= 2;                    // mov      r2,r2,lsr 2h
+                    if ((b & 0x100) == 0)       // tst      r2,100h
+                    {
+                        l = _data[g++];         // ldrbeq   r12,[r7],1h
+                        b = l | 0xFF00;         // orreq    r2,r12,0FF00h
+                    }
+
+                    c = e & (b << 2);           // and      r3,r5,r2,lsl 2h
+                    switch (c)                  // ldr      r15,[r6,r3]
+                    {
+                        case 0x0:
+                            dataInBlockRemaining = false;
+                            break;
+
+                        case 0x4:
+                            l = _data[g++];             // ldrb     r12,[r7],1h
+                            _pixels.Add((byte)l);       // strb     r12,[r8],1h
+                            break;
+
+                        case 0x8:
+                            c = _data[g++];             // ldrb     r3,[r7],1h
+                            d = _data[g++];             // ldrb     r4,[r8],1h
+                            l = d & 0xF0;               // and      r12,r4,0F0h
+                            c |= (l << 4);              // orr      r3,r3,r12,lsl 4h
+                            l = d - l;                  // sub      r12,r4,r12
+                            d = l + 2;                  // add      r4,r12,2h
+                            c = (_pixels.Count) - c;    // sub      r3,r8,r3
+
+                            while (d > 0)
+                            {
+
+                                l = _pixels[c++];           // ldrb     r12,[r3],1h
+                                _pixels.Add((byte)l);       // strb     r12,[r8],1h
+                                d--;
+                            }
+                            break;
+
+                        case 0xC:
+                            c = _data[g++];             // ldrb     r3,[r7],1h
+                            l = _data[g++];             // ldrb     r12,[r7],1h
+                            c += 2;                     // add      r3,r3,2h
+
+                            while (c > 0)
+                            {
+                                _pixels.Add((byte)l);       // strb     r12,[r8],1h
+                                c--;                        // subs     r3,r3,1h
+                            }
+                            break;
+
+                        default:
+                            throw new IndexOutOfRangeException($"Unexpected index {c} encountered");
+                    }
+                }
+            }
+
+            return _pixels.ToArray();
+        }
+
         #region BG_Tile_ASM
         private void Lxx_020747D8()
         {
