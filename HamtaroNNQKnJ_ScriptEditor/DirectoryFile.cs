@@ -126,7 +126,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 _content = value;
                 
-                if (MessageFile.CanParse(Content))
+                if (_content.FirstOrDefault() == 0x10)
+                {
+                    FileType = "Background File";
+                }
+                else if (MessageFile.CanParse(Content))
                 {
                     FileType = "Message File";
                 }

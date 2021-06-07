@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="FolderBrowserEx" Version="1.0.1" />
+    <PackageReference Include="lzo.net" Version="0.0.6" />
   </ItemGroup>
 
 </Project>

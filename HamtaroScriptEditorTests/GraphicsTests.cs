@@ -20,7 +20,8 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         private const string COPYRIGHT_SCREEN_COMPRESSED_TILES = ".\\inputs\\GraphicsCopyrightScreenCompressedTiles.dat";
         private const string COPYRIGHT_SCREEN_TILES_PIXEL_DATA = ".\\inputs\\GraphicsCopyrightScreenTilePixels.dstile";
 
-        private const string ALPHA_DREAM_LOGO_SPRITE_PIXEL_DATA = ".\\inputs\\GraphicsHajimeruSpriteTiles.dat";
+        private const string ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES = ".\\inputs\\GraphicsAlphaDreamLogoSpriteTiles.dat";
+        private const string HAJIMERU_SPRITE_COMPRESSED_TILES = ".\\inputs\\GraphicsHajimeruSpriteTiles.dat";
 
         [Test]
         [TestCase(NINTENDO_LOGO_COMPRESSED_TILES, NINTENDO_LOGO_TILES_PIXEL_DATA)]
@@ -52,7 +53,8 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         }
 
         [Test]
-        [TestCase(ALPHA_DREAM_LOGO_SPRITE_PIXEL_DATA, "")]
+        [TestCase(ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES, "")]
+        [TestCase(HAJIMERU_SPRITE_COMPRESSED_TILES, "")]
         public void ParseSpritePixelsTest(string compressedDataFile, string pixelDataFile)
         {
             var compressedData = File.ReadAllBytes(compressedDataFile);

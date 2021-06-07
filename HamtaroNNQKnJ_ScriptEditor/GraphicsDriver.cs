@@ -25,8 +25,10 @@ namespace HamtaroNNQKnJ_ScriptEditor
         private int n; // r14
 
         private byte[] data { get; set; }
+        private List<byte> _data { get; set; }
         private byte[] pixels { get; set; }
         private List<byte> _pixels { get; set; }
+        private int globalByteIndex { get; set; }
 
         public byte[] GetBgTilePixelsUsingCrudeASMSimulator(byte[] compressedData)
         {
@@ -60,7 +62,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             d = 0x20C9A8C;
             e = 0x0C;
             f = 0x02066520;
-            g = 5; // byte counter
+            g = 0; // byte counter
             h = 0; // pixel counter;
             i = 0x020C95E0;
             j = 0x020D0D94;
@@ -70,7 +72,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
             n = 0x020666C8;
 
             _pixels = new List<byte>();
-            Lxx_020664A0();
+            globalByteIndex = 3;
+            SpriteTileDataPrep();
             return _pixels.ToArray();
         }
 
@@ -277,18 +280,50 @@ namespace HamtaroNNQKnJ_ScriptEditor
         #endregion
 
         #region Sprite_Tile_ASM
+        #region Block_Loading_Subroutine
+        public void SpriteTileDataPrep()
+        {
+            if (globalByteIndex >= data.Length)
+            {
+                return;
+            }
+            if (data[globalByteIndex] == 0x60)
+            {
+                globalByteIndex += 2;
+                _data = data.Skip(globalByteIndex).Take(data.Length - globalByteIndex - 3).ToList();
+                globalByteIndex = data.Length;
+            }
+            else
+            {
+                short blockLength = BitConverter.ToInt16(new byte[] { data[globalByteIndex], data[globalByteIndex + 1] });
+                globalByteIndex += 2;
+
+                _data = data.Skip(globalByteIndex).Take(blockLength).ToList();
+                _data.AddRange(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 });
+                globalByteIndex += blockLength;
+            }
+
+            b = 0;
+            e = 0x0C;
+            g = 0;
+            Lxx_020664A0();
+        }
+        #endregion
+
+        #region Block_Decompression_Subroutine
         public void Lxx_020664A0()
         {
             b >>= 2;                    // mov      r2,r2,lsr 2h
             if ((b & 0x100) == 0)       // tst      r2,100h
             {
-                l = data[g++];          // ldrbeq   r12,[r7],1h
+                l = _data[g++];         // ldrbeq   r12,[r7],1h
                 b = l | 0xFF00;         // orreq    r2,r12,0FF00h
             }
             c = e & (b << 2);           // and      r3,r5,r2,lsl 2h
             switch (c)                  // ldr      r15,[r6,r3]
             {
                 case 0x0:
+                    SpriteTileDataPrep();
                     break;
 
                 case 0x4:
@@ -310,15 +345,15 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         public void Lxx_020664C8()
         {
-            l = data[g++];              // ldrb     r12,[r7],1h
+            l = _data[g++];             // ldrb     r12,[r7],1h
             _pixels.Add((byte)l);       // strb     r12,[r8],1h
             Lxx_020664A0();             // b        Lxx_20664A0h;
         }
 
         public void Lxx_020664D4()
         {
-            c = data[g++];              // ldrb     r3,[r7],1h
-            d = data[g++];              // ldrb     r4,[r8],1h
+            c = _data[g++];             // ldrb     r3,[r7],1h
+            d = _data[g++];             // ldrb     r4,[r8],1h
             l = d & 0xF0;               // and      r12,r4,0F0h
             c |= (l << 4);              // orr      r3,r3,r12,lsl 4h
             l = d - l;                  // sub      r12,r4,r12
@@ -329,7 +364,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         public void Lxx_020664F0()
         {
-            l = _pixels[c++];              // ldrb     r12,[r3],1h
+            l = _pixels[c++];           // ldrb     r12,[r3],1h
             _pixels.Add((byte)l);       // strb     r12,[r8],1h
             d--;
             if (d != 0)                 // subs     r4,r4,1h
@@ -344,8 +379,8 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         public void Lxx_02066504()
         {
-            c = data[g++];              // ldrb     r3,[r7],1h
-            l = data[g++];              // ldrb     r12,[r7],1h
+            c = _data[g++];             // ldrb     r3,[r7],1h
+            l = _data[g++];             // ldrb     r12,[r7],1h
             c += 2;                     // add      r3,r3,2h
             Lxx_02066510();
         }
@@ -363,6 +398,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 Lxx_020664A0();         // b        Lxx_20664A0h
             }
         }
+        #endregion
         #endregion
     }
 }
