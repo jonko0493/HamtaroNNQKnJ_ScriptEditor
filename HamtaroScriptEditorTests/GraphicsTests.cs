@@ -86,9 +86,24 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
             var newGraphicsDriver = new GraphicsDriver();
 
             var asmSimulatorPixelData = asmGraphicsDriver.GetSpriteTilePixelsUsingCrudeASMSimulator(compressedData);
-            var newAlgorithmPixelData = newGraphicsDriver.DecompressSpriteTiles(compressedData);
+            var newAlgorithmPixelData = newGraphicsDriver.DecompressSpriteTilesUsingStateMachine(compressedData);
 
-            Assert.AreEqual(newAlgorithmPixelData, asmSimulatorPixelData);
+            Assert.AreEqual(asmSimulatorPixelData, newAlgorithmPixelData);
+        }
+
+        [Test]
+        [TestCase(ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES, ALPHA_DREAM_LOGO_SPRITE_TILES_PIXEL_DATA)]
+        [TestCase(HAJIMERU_SPRITE_COMPRESSED_TILES, HAJIMERU_SPRITE_TILES_PIXEL_DATA)]
+        public void YoshiMagicSpriteDecompressionAlgorithTest(string compressedDataFile, string pixelDataFile)
+        {
+            var compressedData = File.ReadAllBytes(compressedDataFile);
+
+            var graphicsDriver = new GraphicsDriver();
+
+            var oldAlgorithmPixelData = graphicsDriver.DecompressSpriteTilesUsingStateMachine(compressedData);
+            var yoshiMagicaPixelData = GraphicsDriver.DecompressSpriteTiles(compressedData);
+
+            Assert.AreEqual(oldAlgorithmPixelData, yoshiMagicaPixelData);
         }
 
         [Test]

@@ -54,7 +54,10 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 var content = new List<byte>();
                 for (int j = directoryFile.FilesInDirectory[i].Offset; j < nextOffset; j++)
                 {
-                    content.Add(data[j]);
+                    if (j > 0)
+                    {
+                        content.Add(data[j]);
+                    }
                 }
                 directoryFile.FilesInDirectory[i].Content = content.ToArray();
             }
@@ -115,6 +118,68 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 FileEnd = FilesInDirectory.Last().Offset + FilesInDirectory.Last().Content.Length;
             }
         }
+
+        public void ParseSpriteIndexFile()
+        {
+            byte[] spriteIndexFileData = FilesInDirectory[0].Content;
+            FilesInDirectory[0].FileType = "Sprite File Index";
+
+            int numSpriteMaps = BitConverter.ToInt32(spriteIndexFileData.Take(4).ToArray()); // first word is number of sprites
+            int numPals = BitConverter.ToInt32(spriteIndexFileData.Skip(4).Take(4).ToArray()); // second word is number of palettes
+
+            // loop through palettes first
+            List<PaletteFile> paletteFiles = new List<PaletteFile>();
+            for (int i = 8 + numSpriteMaps * 8; i < numPals * 8 + numSpriteMaps * 8 + 8; i += 8)
+            {
+                short paletteIndex = BitConverter.ToInt16(new byte[] { spriteIndexFileData[i], spriteIndexFileData[i + 1] });
+                short unknown1 = BitConverter.ToInt16(new byte[] { spriteIndexFileData[i + 2], spriteIndexFileData[i + 3] });
+                short unknown2 = BitConverter.ToInt16(new byte[] { spriteIndexFileData[i + 4], spriteIndexFileData[i + 5] });
+                short unknown3 = BitConverter.ToInt16(new byte[] { spriteIndexFileData[i + 6], spriteIndexFileData[i + 7] });
+
+                paletteFiles.Add(new PaletteFile
+                {
+                    Offset = FilesInDirectory[paletteIndex].Offset,
+                    Content = FilesInDirectory[paletteIndex].Content,
+                    Notes = FilesInDirectory[paletteIndex].Notes,
+                    Index = paletteIndex,
+                    UnknownShort1 = unknown1,
+                    UnknownShort2 = unknown2,
+                    UnknownShort3 = unknown3,
+                });
+                FilesInDirectory[paletteIndex] = paletteFiles.Last();
+
+                ((PaletteFile)FilesInDirectory[paletteIndex]).LoadColors(FilesInDirectory[paletteIndex].Content);
+            }
+            // then loop through sprite maps
+            for (int i = 8; i < numSpriteMaps * 8 + 8; i += 8)
+            {
+                short spriteIndex = BitConverter.ToInt16(new byte[] { spriteIndexFileData[i], spriteIndexFileData[i + 1] });
+                short associatedPaletteIndex = BitConverter.ToInt16(new byte[] { spriteIndexFileData[i + 2], spriteIndexFileData[i + 3] });
+                short unknown1 = BitConverter.ToInt16(new byte[] { spriteIndexFileData[i + 4], spriteIndexFileData[i + 5] });
+                short unknown2 = BitConverter.ToInt16(new byte[] { spriteIndexFileData[i + 6], spriteIndexFileData[i + 7] });
+
+                FilesInDirectory[spriteIndex] = new SpriteMapFile
+                {
+                    Offset = FilesInDirectory[spriteIndex].Offset,
+                    Content = FilesInDirectory[spriteIndex].Content,
+                    Notes = FilesInDirectory[spriteIndex].Notes,
+                    Index = spriteIndex,
+                    AssociatedPaletteIndex = associatedPaletteIndex,
+                    AssociatedPalette = paletteFiles[associatedPaletteIndex],
+                    UnknownShort1 = unknown1,
+                    UnknownShort2 = unknown2,
+                };
+
+                FilesInDirectory[spriteIndex + 1] = new TileFile
+                {
+                    Offset = FilesInDirectory[spriteIndex + 1].Offset,
+                    Content = FilesInDirectory[spriteIndex + 1].Content,
+                    Notes = FilesInDirectory[spriteIndex + 1].Notes,
+                    FileType = "Sprite Tile File",
+                    SpriteMapFile = (SpriteMapFile)FilesInDirectory[spriteIndex],
+                };
+            }
+        }
     }
 
     public class FileInDirectory
@@ -122,37 +187,41 @@ namespace HamtaroNNQKnJ_ScriptEditor
         private byte[] _content;
 
         public int Offset { get; set; }
-        public byte[] Content { get { return _content; } set
+        public byte[] Content
+        {
+            get { return _content; }
+            set
             {
                 _content = value;
-                
+
+                // these are all educated guesses
                 if (_content.FirstOrDefault() == 0x10)
                 {
                     FileType = "Background File";
                 }
-                else if (_content.FirstOrDefault() == 0x40 || _content.FirstOrDefault() == 0x60)
+                else if (GetType() == typeof(SpriteMapFile))
                 {
-                    FileType = "Sprite File";
+                    FileType = "Sprite Map File";
+                }
+                else if (GetType() == typeof(PaletteFile))
+                {
+                    FileType = "Palette File";
                 }
                 else if (_content.FirstOrDefault() == 0x80 || _content.FirstOrDefault() == 0xA0)
                 {
                     FileType = "80 or A0 File";
                 }
-                else if (_content.Length == 512 || _content.Length == 128 || _content.Length == 64 || _content.Length == 32)
-                {
-                    FileType = "Palette File";
-                }
-                else if (MessageFile.CanParse(Content))
-                {
-                    FileType = "Message File";
-                }
+                //else if (MessageFile.CanParse(Content))
+                //{
+                //    FileType = "Message File";
+                //}
                 else
                 {
                     FileType = "Unknown File";
                 }
             }
         }
-        public string FileType { get; private set; }
+        public string FileType { get; set; }
         public string Notes { get; set; }
 
         public override string ToString()

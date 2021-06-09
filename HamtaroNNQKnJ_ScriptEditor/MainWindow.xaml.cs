@@ -316,6 +316,34 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 };
                 fileTextBox.TextChanged += FileTextBox_TextChanged;
                 directoryFileDetailsStackPanel.Children.Add(fileTextBox);
+
+                if (file.GetType() == typeof(SpriteMapFile))
+                {
+                    var spriteMapFile = (SpriteMapFile)file;
+                    directoryFileDetailsStackPanel.Children.Add(new Separator());
+                    directoryFileDetailsStackPanel.Children.Add(new TextBlock
+                    {
+                        Text = $"Associated Palette: {spriteMapFile.AssociatedPaletteIndex} (file {spriteMapFile.AssociatedPalette?.Index ?? -1})"
+                    });
+                }
+                else if (file.GetType() == typeof(TileFile))
+                {
+                    var tileFile = (TileFile)file;
+                    if (tileFile.SpriteMapFile is not null)
+                    {
+                        directoryFileDetailsStackPanel.Children.Add(new Separator());
+                        directoryFileDetailsStackPanel.Children.Add(new TextBlock
+                        {
+                            Text = $"Associated Palette: {tileFile.SpriteMapFile.AssociatedPaletteIndex} (file {tileFile.SpriteMapFile.AssociatedPalette?.Index ?? -1})"
+                        });
+                    }
+                }
+                else if (file.GetType() == typeof(PaletteFile))
+                {
+                    var paletteFile = (PaletteFile)file;
+                    directoryFileDetailsStackPanel.Children.Add(new Separator());
+                    directoryFileDetailsStackPanel.Children.Add(new Image { Source = Helpers.GetBitmapImageFromBitmap(paletteFile.GetPaletteDisplay()) });
+                }
             }
             if (e.RemovedItems.Count > 0)
             {
@@ -374,9 +402,16 @@ namespace HamtaroNNQKnJ_ScriptEditor
             if (saveFileDialog.ShowDialog() == true)
             {
                 var file = (FileInDirectory)directoryListBox.SelectedItem;
-                var tileFile = TileFile.ParseSpriteFromCompressedData(file.Content);
-                tileFile.WritePixelsToFile(saveFileDialog.FileName);
-                MessageBox.Show("Extracted successfully!");
+                try
+                {
+                    var tileFile = TileFile.ParseSpriteFromCompressedData(file.Content);
+                    tileFile.WritePixelsToFile(saveFileDialog.FileName);
+                    MessageBox.Show("Extracted successfully!");
+                }
+                catch (Exception exc)
+                {
+                    MessageBox.Show($"Error extracting sprite file: ${exc.Message}");
+                }
             }
         }
 
@@ -405,6 +440,12 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 paletteFile.WriteRiffPaletteFile(saveFileDialog.FileName);
                 MessageBox.Show("Extracted successfully!");
             }
+        }
+
+        private void ParseSpriteIndexFile_Click(object sender, RoutedEventArgs e)
+        {
+            _directoryFile.ParseSpriteIndexFile();
+            directoryListBox.Items.Refresh();
         }
     }
 }

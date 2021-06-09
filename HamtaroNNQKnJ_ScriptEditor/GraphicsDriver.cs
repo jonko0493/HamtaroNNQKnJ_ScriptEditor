@@ -144,7 +144,70 @@ namespace HamtaroNNQKnJ_ScriptEditor
             return pixels;
         }
 
-        public byte[] DecompressSpriteTiles(byte[] compressedData)
+        public static byte[] DecompressSpriteTiles(byte[] compressedData)
+        {
+            var pixels = new List<byte>();
+            int index = 0;
+
+            // Parse header data
+            byte sizeLength = (byte)(compressedData[index] >> 6); // first two bits indicate length of decompressed length
+            int decompressedSize = compressedData[index++] & 0x3F;
+            for (; index <= sizeLength; index++)
+            {
+                decompressedSize |= compressedData[index] << (6 * index);
+            }
+
+            byte blockSizeLength = (byte)(compressedData[index] >> 6);
+            int numCompressionBlocks = compressedData[index++] & 0x3F;
+            for (int tempIndex = 1; index <= blockSizeLength; index++)
+            {
+                numCompressionBlocks |= compressedData[index] << 6 * tempIndex;
+                tempIndex++;
+            }
+
+            for (int compressionBlock = 0; compressionBlock <= numCompressionBlocks; compressionBlock++)
+            {
+                index += 2; // skip 16-bit header
+                bool notFinished = true;
+                for (int i = 0; i <= 0xFF && notFinished; i++)
+                {
+                    byte openingByte = compressedData[index++];
+                    for (int j = 0; j <= 3 && notFinished; j++)
+                    {
+                        switch (openingByte & 3)
+                        {
+                            case 0:
+                                notFinished = false;
+                                break;
+                            case 1:
+                                pixels.Add(compressedData[index++]);
+                                break;
+                            case 2:
+                                byte orredByte = compressedData[index++];
+                                byte lengthByte = compressedData[index++];
+                                for (int k = 0; k <= (lengthByte & 0xF) + 1; k++)
+                                {
+                                    pixels.Add(pixels[pixels.Count - (((lengthByte & 0xF0) << 4) | orredByte)]);
+                                }
+                                break;
+                            case 3:
+                                byte firstByte = compressedData[index++];
+                                byte secondByte = compressedData[index++];
+                                for (int k = 0; k <= firstByte + 1; k++)
+                                {
+                                    pixels.Add(secondByte);
+                                }
+                                break;
+                        }
+                        openingByte >>= 2;
+                    }
+                }
+            }
+
+            return pixels.ToArray();
+        }
+
+        public byte[] DecompressSpriteTilesUsingStateMachine(byte[] compressedData)
         {
             data = compressedData;
             _pixels = new List<byte>();

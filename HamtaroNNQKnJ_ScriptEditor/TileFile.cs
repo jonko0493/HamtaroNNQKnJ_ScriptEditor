@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 
 namespace HamtaroNNQKnJ_ScriptEditor
 {
-    public class TileFile
+    public class TileFile : FileInDirectory
     {
+        public SpriteMapFile SpriteMapFile { get; set; }
+
         public byte[] CompressedData { get; set; }
         public byte[] PixelData { get; set; }
 
@@ -28,8 +30,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 CompressedData = data,
             };
-            GraphicsDriver graphicsDriver = new GraphicsDriver();
-            tileFile.PixelData = graphicsDriver.DecompressSpriteTiles(data);
+            tileFile.PixelData = GraphicsDriver.DecompressSpriteTiles(data);
             return tileFile;
         }
 

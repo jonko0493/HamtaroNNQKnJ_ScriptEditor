@@ -8,9 +8,28 @@ using System.Threading.Tasks;
 
 namespace HamtaroNNQKnJ_ScriptEditor
 {
-    public class PaletteFile
+    public class PaletteFile : FileInDirectory
     {
+        public int Index { get; set; }
+        public short UnknownShort1 { get; set; }
+        public short UnknownShort2 { get; set; }
+        public short UnknownShort3 { get; set; }
+
         public List<Color> Palette { get; set; } = new List<Color>();
+
+        public void LoadColors(byte[] data)
+        {
+            for (int i = 0; i < data.Length; i += 2)
+            {
+                short color = BitConverter.ToInt16(new byte[] { data[i], data[i + 1] });
+                Palette.Add(Color.FromArgb((color & 0x1F) << 3, ((color >> 5) & 0x1F) << 3, ((color >> 10) & 0x1F) << 3));
+            }
+
+            while (Palette.Count < 256)
+            {
+                Palette.Add(Color.FromArgb(0, 0, 0));
+            }
+        }
 
         public static PaletteFile ParseFromData(byte[] data)
         {
@@ -20,17 +39,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
 
             PaletteFile paletteFile = new PaletteFile();
-
-            for (int i = 0; i < data.Length; i += 2)
-            {
-                short color = BitConverter.ToInt16(new byte[] { data[i], data[i + 1] });
-                paletteFile.Palette.Add(Color.FromArgb((color & 0x1F) << 3, ((color >> 5) & 0x1F) << 3, ((color >> 10) & 0x1F) << 3));
-            }
-
-            while (paletteFile.Palette.Count < 256)
-            {
-                paletteFile.Palette.Add(Color.FromArgb(0, 0, 0));
-            }
+            paletteFile.LoadColors(data);
 
             return paletteFile;
         }
@@ -46,7 +55,6 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
             int documentSize = 16 + Palette.Count * 4;
             ushort count = (ushort)Palette.Count;
-            int chunkSize = 4 + count * 4;
 
             riffBytes.AddRange(Encoding.ASCII.GetBytes("RIFF"));
             riffBytes.AddRange(BitConverter.GetBytes(documentSize));
@@ -69,6 +77,24 @@ namespace HamtaroNNQKnJ_ScriptEditor
         public void WriteRiffPaletteFile(string file)
         {
             File.WriteAllBytes(file, GetRiffPaletteBytes());
+        }
+
+        public Bitmap GetPaletteDisplay()
+        {
+            Bitmap bitmap = new Bitmap(256, 256);
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                int offset = 0;
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    if (y % 16 == 0 && y != 0)
+                    {
+                        offset++;
+                    }
+                    bitmap.SetPixel(x, y, Palette[x / 16 + 16 * offset]);
+                }
+            }
+            return bitmap;
         }
     }
 }
