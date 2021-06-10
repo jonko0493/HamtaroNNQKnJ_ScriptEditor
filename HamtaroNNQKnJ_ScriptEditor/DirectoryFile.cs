@@ -119,6 +119,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
         }
 
+        // This routine is borrowed from Yoshi Magic and modified
         public void ParseSpriteIndexFile()
         {
             byte[] spriteIndexFileData = FilesInDirectory[0].Content;
@@ -169,6 +170,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                     UnknownShort1 = unknown1,
                     UnknownShort2 = unknown2,
                 };
+                ((SpriteMapFile)FilesInDirectory[spriteIndex]).Initialize();
 
                 FilesInDirectory[spriteIndex + 1] = new TileFile
                 {
@@ -178,6 +180,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                     FileType = "Sprite Tile File",
                     SpriteMapFile = (SpriteMapFile)FilesInDirectory[spriteIndex],
                 };
+                ((SpriteMapFile)FilesInDirectory[spriteIndex]).AssociatedTiles = (TileFile)FilesInDirectory[spriteIndex + 1];
                 try
                 {
                     ((TileFile)FilesInDirectory[spriteIndex + 1]).PixelData = GraphicsDriver.DecompressSpriteTiles(FilesInDirectory[spriteIndex + 1].Content);

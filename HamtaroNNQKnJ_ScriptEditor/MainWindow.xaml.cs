@@ -325,6 +325,14 @@ namespace HamtaroNNQKnJ_ScriptEditor
                     {
                         Text = $"Associated Palette: {spriteMapFile.AssociatedPaletteIndex} (file {spriteMapFile.AssociatedPalette?.Index ?? -1})"
                     });
+                    if (spriteMapFile.AssociatedTiles is not null && spriteMapFile.AssociatedPalette is not null)
+                    {
+                        directoryFileDetailsStackPanel.Children.Add(new Separator());
+                        for (int i = 0; i < spriteMapFile.NumClips; i++)
+                        {
+                            directoryFileDetailsStackPanel.Children.Add(new Image { Source = Helpers.GetBitmapImageFromBitmap(spriteMapFile.GetAnimationPreview(i)) });
+                        }
+                    }
                 }
                 else if (file.GetType() == typeof(TileFile))
                 {
@@ -338,9 +346,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         });
                         if (tileFile.PixelData is not null)
                         {
-                            directoryFileDetailsStackPanel.Children.Add(new Image { Source = Helpers.GetBitmapImageFromBitmap(tileFile.Get16ColorImage()) });
+                            directoryFileDetailsStackPanel.Children.Add(new Image { Source = Helpers.GetBitmapImageFromBitmap(tileFile.Get16ColorImage()), MaxWidth = 256 });
                             directoryFileDetailsStackPanel.Children.Add(new Separator());
-                            directoryFileDetailsStackPanel.Children.Add(new Image { Source = Helpers.GetBitmapImageFromBitmap(tileFile.Get256ColorImage()) });
+                            directoryFileDetailsStackPanel.Children.Add(new Image { Source = Helpers.GetBitmapImageFromBitmap(tileFile.Get256ColorImage()), MaxWidth = 256 });
                         }
                     }
                 }

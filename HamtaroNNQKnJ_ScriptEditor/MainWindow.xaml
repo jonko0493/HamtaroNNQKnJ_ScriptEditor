@@ -28,7 +28,7 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Directory" Height="20" VerticalAlignment="Top">
-                <Grid>
+                <Grid x:Name="directoryGrid">
                     <ToolBarTray Orientation="Horizontal">
                         <ToolBar x:Name="directoryToolBar">
                             <Button x:Name="openDirectoryFileButton" Content="Open" HorizontalAlignment="Left" Click="OpenDirectoryFileButton_Click" />
@@ -45,14 +45,16 @@
 
                         </ToolBar>
                     </ToolBarTray>
-                    <ListBox x:Name="directoryListBox" Margin="0,30,219,0" SelectionChanged="DirectoryListBox_SelectionChanged" />
-                    <StackPanel Margin="824,30,0,0">
-                        <StackPanel Orientation="Horizontal">
+                    <ListBox x:Name="directoryListBox" Margin="0,30,439,0" SelectionChanged="DirectoryListBox_SelectionChanged" />
+                    <DockPanel Margin="604,30,0,0" Height="{Binding ElementName=directoryGrid, Path=ActualHeight}">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
                             <TextBlock TextAlignment="Right" Margin="0,2,0,0">Global Offset: 0x</TextBlock>
                             <TextBox x:Name="globalOffsetTextBox" Width="100" Text="00000000" TextChanged="GlobalOffsetTextBox_TextChanged" />
                         </StackPanel>
-                        <StackPanel x:Name="directoryFileDetailsStackPanel"  />
-                    </StackPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Visible" DockPanel.Dock="Bottom">
+                            <StackPanel x:Name="directoryFileDetailsStackPanel" />
+                        </ScrollViewer>
+                    </DockPanel>
                 </Grid>
             </TabItem>
             <TabItem Header="Hex Editor">
