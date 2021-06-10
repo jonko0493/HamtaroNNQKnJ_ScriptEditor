@@ -70,11 +70,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
                                 pixels.Add(compressedData[index++]);
                                 break;
                             case 2:
-                                byte orredByte = compressedData[index++];
-                                byte lengthByte = compressedData[index++];
-                                for (int k = 0; k <= (lengthByte & 0xF) + 1; k++)
+                                byte LsbPointer = compressedData[index++]; // contains the least significant bits of the pointer
+                                byte lengthAndMsbPointer = compressedData[index++]; // first four bits are MSB of pointer, last four bits are length of sequence
+                                for (int k = 0; k <= (lengthAndMsbPointer & 0x0F) + 1; k++)
                                 {
-                                    pixels.Add(pixels[pixels.Count - (((lengthByte & 0xF0) << 4) | orredByte)]);
+                                    pixels.Add(pixels[pixels.Count - (((lengthAndMsbPointer & 0xF0) << 4) | LsbPointer)]);
                                 }
                                 break;
                             case 3:

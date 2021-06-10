@@ -292,6 +292,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 openInMessageButton.IsEnabled = true;
                 extractBgTilesButton.IsEnabled = true;
                 extractSpriteTilesButton.IsEnabled = true;
+                reinsertSpriteTilesButton.IsEnabled = true;
                 exportPaletteButton.IsEnabled = true;
                 directoryFileDetailsStackPanel.Children.Clear();
 
@@ -425,6 +426,27 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 catch (Exception exc)
                 {
                     MessageBox.Show($"Error extracting sprite file: ${exc.Message}");
+                }
+            }
+        }
+
+        private void ReinsertSpriteTilesButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "dstile file|*.dstile"
+            };
+            if (openFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var tileFile = TileFile.CreateFromTiles(File.ReadAllBytes(openFileDialog.FileName));
+                    _directoryFile.ReinsertSpriteFile(directoryListBox.SelectedIndex, tileFile);
+                    directoryListBox.Items.Refresh();
+                }
+                catch (Exception exc)
+                {
+                    MessageBox.Show($"Error reinserting tile file: ${exc.Message}");
                 }
             }
         }

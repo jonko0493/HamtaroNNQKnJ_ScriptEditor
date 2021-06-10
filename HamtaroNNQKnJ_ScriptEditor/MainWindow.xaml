@@ -39,8 +39,9 @@
                         </ToolBar>
                         <ToolBar x:Name="directorySelectToolBar">
                             <Button x:Name="openInMessageButton" Content="Open in Messages" HorizontalAlignment="Left" IsEnabled="False" Click="OpenInMessageButton_Click" />
-                            <Button x:Name="extractBgTilesButton" Content="Decompress BG Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="ExtractBgTilesButton_Click" />
-                            <Button x:Name="extractSpriteTilesButton" Content="Decompress Sprite Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="ExtractSpriteTilesButton_Click" />
+                            <Button x:Name="extractBgTilesButton" Content="Extract BG Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="ExtractBgTilesButton_Click" />
+                            <Button x:Name="extractSpriteTilesButton" Content="Extract Sprite Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="ExtractSpriteTilesButton_Click" />
+                            <Button x:Name="reinsertSpriteTilesButton" Content="Reinsert Sprite Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="ReinsertSpriteTilesButton_Click" />
                             <Button x:Name="exportPaletteButton" Content="Export Palette" HorizontalAlignment="Left" IsEnabled="False" Click="ExportPaletteButton_Click" />
 
                         </ToolBar>

@@ -105,6 +105,25 @@ namespace HamtaroNNQKnJ_ScriptEditor
             RecalculatePointers();
         }
 
+        public void ReinsertSpriteFile(int index, TileFile tileFile)
+        {
+            tileFile.Notes = FilesInDirectory[index].Notes;
+            tileFile.FileType = FilesInDirectory[index].FileType;
+
+            TileFile currentFile = null;
+            if (FilesInDirectory[index].GetType() == typeof(TileFile))
+            {
+                currentFile = (TileFile)FilesInDirectory[index];
+                tileFile.SpriteMapFile = currentFile.SpriteMapFile;
+                tileFile.Palette = currentFile.Palette;
+                tileFile.SpriteMapFile.AssociatedTiles = tileFile;
+            }
+
+            FilesInDirectory[index] = tileFile;
+
+            RecalculatePointers();
+        }
+
         private void RecalculatePointers()
         {
             FilesInDirectory[0].Offset = FilesInDirectory.Count * 4; // Adds the number of 32-bit integer bytes (4 * # of pointers) as first pointer

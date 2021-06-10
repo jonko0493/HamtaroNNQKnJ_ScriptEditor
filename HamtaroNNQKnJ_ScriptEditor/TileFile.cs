@@ -37,6 +37,16 @@ namespace HamtaroNNQKnJ_ScriptEditor
             return tileFile;
         }
 
+        public static TileFile CreateFromTiles(byte[] tiles)
+        {
+            var tileFile = new TileFile
+            {
+                PixelData = tiles,
+            };
+            tileFile.Content = GraphicsDriver.CompressSpriteData(tileFile.PixelData);
+            return tileFile;
+        }
+
         public void WritePixelsToFile(string file)
         {
             File.WriteAllBytes(file, PixelData);
