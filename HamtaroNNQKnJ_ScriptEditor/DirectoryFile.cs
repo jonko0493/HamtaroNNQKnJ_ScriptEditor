@@ -183,7 +183,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 ((SpriteMapFile)FilesInDirectory[spriteIndex]).AssociatedTiles = (TileFile)FilesInDirectory[spriteIndex + 1];
                 try
                 {
-                    ((TileFile)FilesInDirectory[spriteIndex + 1]).PixelData = GraphicsDriver.DecompressSpriteTiles(FilesInDirectory[spriteIndex + 1].Content);
+                    ((TileFile)FilesInDirectory[spriteIndex + 1]).PixelData = GraphicsDriver.DecompressSpriteData(FilesInDirectory[spriteIndex + 1].Content);
                 }
                 catch (Exception)
                 {

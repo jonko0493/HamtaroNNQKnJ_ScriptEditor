@@ -26,6 +26,12 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         private const string HAJIMERU_SPRITE_COMPRESSED_TILES = ".\\inputs\\GraphicsHajimeruSpriteCompressedTiles.dat";
         private const string HAJIMERU_SPRITE_TILES_PIXEL_DATA = ".\\inputs\\GraphicsHajimeruSpriteTilePixels.dstile";
 
+        private const string COMPRESSED_TILE_FILE_80 = ".\\inputs\\Graphics80CompressedTileFile.dat";
+        private const string DECOMPRESSED_TILE_FILE_80 = ".\\inputs\\Graphics80DecompressedTileFile.dstile";
+
+        private const string COMPRESSED_TILE_FILE_A0 = ".\\inputs\\GraphicsA0CompressedTileFile.dat";
+        private const string DECOMPRESSED_TILE_FILE_A0 = ".\\inputs\\GraphicsA0DecompressedTileFile.dstile";
+
         private const string BUTTONS_PALETTE_DATA = ".\\inputs\\PaletteButtons.dat";
         private const string BUTTONS_PALETTE_RIFF = ".\\inputs\\PaletteButtons.pal";
 
@@ -86,24 +92,50 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
             var newGraphicsDriver = new GraphicsDriver();
 
             var asmSimulatorPixelData = asmGraphicsDriver.GetSpriteTilePixelsUsingCrudeASMSimulator(compressedData);
-            var newAlgorithmPixelData = newGraphicsDriver.DecompressSpriteTilesUsingStateMachine(compressedData);
+            var newAlgorithmPixelData = newGraphicsDriver.DecompressSpriteTilesUsingRefinedAsmSimulator(compressedData);
 
             Assert.AreEqual(asmSimulatorPixelData, newAlgorithmPixelData);
         }
 
         [Test]
-        [TestCase(ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES, ALPHA_DREAM_LOGO_SPRITE_TILES_PIXEL_DATA)]
-        [TestCase(HAJIMERU_SPRITE_COMPRESSED_TILES, HAJIMERU_SPRITE_TILES_PIXEL_DATA)]
-        public void YoshiMagicSpriteDecompressionAlgorithTest(string compressedDataFile, string pixelDataFile)
+        [TestCase(ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES)]
+        [TestCase(HAJIMERU_SPRITE_COMPRESSED_TILES)]
+        public void YoshiMagicSpriteDecompressionAlgorithTest(string compressedDataFile)
         {
             var compressedData = File.ReadAllBytes(compressedDataFile);
 
             var graphicsDriver = new GraphicsDriver();
 
-            var oldAlgorithmPixelData = graphicsDriver.DecompressSpriteTilesUsingStateMachine(compressedData);
-            var yoshiMagicaPixelData = GraphicsDriver.DecompressSpriteTiles(compressedData);
+            var yoshiMagicaPixelData = GraphicsDriver.DecompressSpriteData(compressedData);
+            var oldAlgorithmPixelData = graphicsDriver.DecompressSpriteTilesUsingRefinedAsmSimulator(compressedData);
 
             Assert.AreEqual(oldAlgorithmPixelData, yoshiMagicaPixelData);
+        }
+
+        [Test]
+        [TestCase(ALPHA_DREAM_LOGO_SPRITE_TILES_PIXEL_DATA)]
+        [TestCase(HAJIMERU_SPRITE_TILES_PIXEL_DATA)]
+        [TestCase(DECOMPRESSED_TILE_FILE_80)]
+        [TestCase(DECOMPRESSED_TILE_FILE_A0)]
+        public void SpriteCompressionAlgorithmTest(string pixelDataFile)
+        {
+            var originalDecompressedData = File.ReadAllBytes(pixelDataFile);
+            var compressedData = GraphicsDriver.CompressSpriteData(originalDecompressedData);
+
+            byte[] newDecompressedData;
+            if (compressedData[0] == 0x40)
+            {
+                // we use the ASM simulator for small files because it's slightly closer to the original subroutine
+                var graphicsDriver = new GraphicsDriver();
+                newDecompressedData = graphicsDriver.DecompressSpriteTilesUsingRefinedAsmSimulator(compressedData);
+            }
+            else
+            {
+                // but I haven't made it work for large files yet lol
+                newDecompressedData = GraphicsDriver.DecompressSpriteData(compressedData);
+            }
+
+            Assert.AreEqual(originalDecompressedData, newDecompressedData);
         }
 
         [Test]

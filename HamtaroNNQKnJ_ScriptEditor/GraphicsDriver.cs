@@ -32,22 +32,22 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
 
         // This routine is borrowed from Yoshi Magic with modifications by me
-        public static byte[] DecompressSpriteTiles(byte[] compressedData)
+        public static byte[] DecompressSpriteData(byte[] compressedData)
         {
             var pixels = new List<byte>();
             int index = 0;
 
             // Parse header data
-            byte sizeLength = (byte)(compressedData[index] >> 6); // first two bits indicate length of decompressed length
+            byte lengthSize = (byte)(compressedData[index] >> 6); // first two bits indicate length of decompressed length
             int decompressedSize = compressedData[index++] & 0x3F;
-            for (; index <= sizeLength; index++)
+            for (; index <= lengthSize; index++)
             {
                 decompressedSize |= compressedData[index] << (6 * index);
             }
 
-            byte blockSizeLength = (byte)(compressedData[index] >> 6);
+            byte blockLengthSize = (byte)(compressedData[index] >> 6);
             int numCompressionBlocks = compressedData[index++] & 0x3F;
-            for (int tempIndex = 1; tempIndex <= blockSizeLength; tempIndex++)
+            for (int tempIndex = 1; tempIndex <= blockLengthSize; tempIndex++)
             {
                 numCompressionBlocks |= compressedData[index++] << (6 * tempIndex);
             }
@@ -78,11 +78,11 @@ namespace HamtaroNNQKnJ_ScriptEditor
                                 }
                                 break;
                             case 3:
-                                byte firstByte = compressedData[index++];
-                                byte secondByte = compressedData[index++];
-                                for (int k = 0; k <= firstByte + 1; k++)
+                                byte byteRepetitions = compressedData[index++];
+                                byte repeatedByte = compressedData[index++];
+                                for (int k = 0; k <= byteRepetitions + 1; k++)
                                 {
-                                    pixels.Add(secondByte);
+                                    pixels.Add(repeatedByte);
                                 }
                                 break;
                         }
@@ -92,6 +92,189 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
 
             return pixels.ToArray();
+        }
+
+        public static byte[] CompressSpriteData(byte[] decompressedData)
+        {
+            // first few bytes encode length of decompressed data
+            List<byte> decompressedLengthBytes = new List<byte>();
+            if (decompressedData.Length > 0x03FFFFF)
+            {
+                throw new ArgumentException($"Data is too large to compress ({decompressedData.Length} bytes)");
+            }
+            else
+            {
+                decompressedLengthBytes.Add((byte)(decompressedData.Length & 0x3F));
+                for (int i = 0; (decompressedData.Length >> (6 + 8 * i)) != 0; i++)
+                {
+                    decompressedLengthBytes.Add((byte)(decompressedData.Length >> (6 * (i + 1))));
+                }
+                decompressedLengthBytes[0] |= (byte)((decompressedLengthBytes.Count - 1) << 6);
+            }
+
+            List<CompressionBlock> compressionBlocks = new List<CompressionBlock>();
+
+            for (int i = 0; i * 512 < decompressedData.Length; i++)
+            {
+                byte[] nextBlock;
+                if (512 * (i + 1) < decompressedData.Length)
+                {
+                    nextBlock = decompressedData.Skip(512 * i).Take(512).ToArray();
+                }
+                else
+                {
+                    nextBlock = decompressedData.Skip(512 * i).Take(decompressedData.Length - 512 * i).ToArray();
+                }
+                compressionBlocks.Add(new CompressionBlock(nextBlock));
+            }
+            List<byte> compressionBlockLengthBytes = new List<byte>();
+            compressionBlockLengthBytes.Add((byte)((compressionBlocks.Count - 1) & 0x3F));
+            for (int i = 0; ((compressionBlocks.Count - 1) >> (6 + 8 * i)) != 0; i++)
+            {
+                compressionBlockLengthBytes.Add((byte)((compressionBlocks.Count - 1) >> (6 * (i + 1))));
+            }
+            compressionBlockLengthBytes[0] |= (byte)((compressionBlockLengthBytes.Count - 1) << 6);
+
+            List<byte> compressedData = new List<byte>();
+            compressedData.AddRange(decompressedLengthBytes);
+            compressedData.AddRange(compressionBlockLengthBytes);
+            foreach (CompressionBlock block in compressionBlocks)
+            {
+                compressedData.AddRange(block.GetBytes());
+            }
+
+            return compressedData.ToArray();
+        }
+
+        private class CompressionBlock
+        {
+            public List<CompressionBlockSegment> Segments { get; set; }
+
+            public CompressionBlock(byte[] data)
+            {
+                Segments = new List<CompressionBlockSegment>();
+                List<CompressedDataInstance> instances = new List<CompressedDataInstance>();
+                for (int i = 0; i < data.Length;)
+                {
+                    // repeated bytes
+                    if (i < data.Length - 2 && data[i] == data[i + 1] && data[i + 1] == data[i + 2])
+                    {
+                        var bytes = data.Skip(i).TakeWhile(d => d == data[i]);
+                        if (bytes.Count() > 0xFF)
+                        {
+                            bytes = bytes.Take(0xFF);
+                        }
+                        instances.Add(new CompressedDataInstance(bytes.ToArray(), CompressionStyle.REPEATED_BYTE));
+                        i += bytes.Count();
+                    }
+                    // TODO: previous lookup
+                    // uncompressed byte
+                    else
+                    {
+                        instances.Add(new CompressedDataInstance(new byte[] { data[i] }, CompressionStyle.UNCOMPRESSED));
+                        i++;
+                    }
+
+                    if (instances.Count == 4)
+                    {
+                        Segments.Add(new CompressionBlockSegment(instances));
+                        instances.Clear();
+                    }
+                }
+
+                if (instances.Count == 0)
+                {
+                    instances.Add(new CompressedDataInstance(new byte[] { }, CompressionStyle.BLOCK_END));
+                }
+
+                Segments.Add(new CompressionBlockSegment(instances));
+            }
+
+            public byte[] GetBytes()
+            {
+                List<byte> data = new List<byte>();
+                foreach (CompressionBlockSegment segment in Segments)
+                {
+                    data.AddRange(segment.GetBytes());
+                }
+                data.InsertRange(0, BitConverter.GetBytes((short)data.Count));
+
+                return data.ToArray();
+            }
+        }
+
+        private class CompressionBlockSegment
+        {
+            public CompressedDataInstance[] Instances { get; set; }
+
+            public CompressionBlockSegment(List<CompressedDataInstance> instances)
+            {
+                if (instances.Count > 4)
+                {
+                    throw new ArgumentException($"Compression block segments can have no more than four instances; received array of count {instances.Count}");
+                }
+                Instances = instances.ToArray();
+            }
+
+            public byte[] GetBytes()
+            {
+                byte openingByte = 0;
+                List<byte> data = new List<byte>();
+                for (int i = 0; i < Instances.Length; i++)
+                {
+                    openingByte |= (byte)((byte)Instances[i].CompressionStyle << (i * 2));
+                    data.AddRange(Instances[i].CompressedData);
+                }
+                data.Insert(0, openingByte);
+
+                return data.ToArray();
+            }
+        }
+
+        private class CompressedDataInstance
+        {
+            public CompressionStyle CompressionStyle { get; set; }
+            public byte[] CompressedData { get; set; }
+
+            public CompressedDataInstance(byte[] uncompressedData, CompressionStyle compressionStyle)
+            {
+                CompressionStyle = compressionStyle;
+
+                switch (CompressionStyle)
+                {
+                    case CompressionStyle.BLOCK_END:
+                        CompressedData = new byte[] { };
+                        break;
+
+                    case CompressionStyle.UNCOMPRESSED:
+                        if (uncompressedData.Length != 1)
+                        {
+                            throw new ArgumentException($"Uncompressed data can only be length 1; received array of length {uncompressedData.Length}");
+                        }
+                        CompressedData = uncompressedData.ToArray();
+                        break;
+
+                    case CompressionStyle.PREVIOUS_LOOKUP:
+                        // TODO: implement
+                        break;
+
+                    case CompressionStyle.REPEATED_BYTE:
+                        if (!uncompressedData.All(d => d == uncompressedData[0]))
+                        {
+                            throw new ArgumentException("Repeated byte data must all be the same value; received array with differing values.");
+                        }
+                        CompressedData = new byte[] { (byte)(uncompressedData.Length - 2), uncompressedData[0] };
+                        break;
+                }
+            }
+        }
+
+        private enum CompressionStyle
+        {
+            BLOCK_END = 0,
+            UNCOMPRESSED = 1,
+            PREVIOUS_LOOKUP = 2,
+            REPEATED_BYTE = 3,
         }
 
         public byte[] GetBgTilePixelsUsingCrudeASMSimulator(byte[] compressedData)
@@ -208,7 +391,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             return pixels;
         }
 
-        public byte[] DecompressSpriteTilesUsingStateMachine(byte[] compressedData)
+        public byte[] DecompressSpriteTilesUsingRefinedAsmSimulator(byte[] compressedData)
         {
             data = compressedData;
             _pixels = new List<byte>();

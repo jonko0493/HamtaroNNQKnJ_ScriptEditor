@@ -33,7 +33,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 Content = data,
             };
-            tileFile.PixelData = GraphicsDriver.DecompressSpriteTiles(data);
+            tileFile.PixelData = GraphicsDriver.DecompressSpriteData(data);
             return tileFile;
         }
 

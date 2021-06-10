@@ -28,7 +28,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
         // This routine is borrowed from Yoshi Magic
         public void Initialize()
         {
-            DecompressedData = GraphicsDriver.DecompressSpriteTiles(Content);
+            DecompressedData = GraphicsDriver.DecompressSpriteData(Content);
 
             NumSequences = BitConverter.ToInt16(new byte[] { DecompressedData[0x0C], DecompressedData[0x0D] });
             NumFrames = BitConverter.ToInt16(new byte[] { DecompressedData[0x0E], DecompressedData[0x0F] });
