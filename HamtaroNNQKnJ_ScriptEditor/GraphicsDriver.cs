@@ -70,7 +70,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                                 pixels.Add(compressedData[index++]);
                                 break;
                             case 2:
-                                byte LsbPointer = compressedData[index++]; // contains the least significant bits of the pointer
+                                byte LsbPointer = compressedData[index++]; // contains the least significant byte of the pointer
                                 byte lengthAndMsbPointer = compressedData[index++]; // first four bits are MSB of pointer, last four bits are length of sequence
                                 for (int k = 0; k <= (lengthAndMsbPointer & 0x0F) + 1; k++)
                                 {
@@ -113,6 +113,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
 
             List<CompressionBlock> compressionBlocks = new List<CompressionBlock>();
+            Dictionary<byte[], int> repeatedValues = new Dictionary<byte[], int>();
 
             for (int i = 0; i * 512 < decompressedData.Length; i++)
             {
@@ -123,9 +124,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 }
                 else
                 {
-                    nextBlock = decompressedData.Skip(512 * i).Take(decompressedData.Length - 512 * i).ToArray();
+                    nextBlock = decompressedData.TakeLast(decompressedData.Length - 512 * i).ToArray();
                 }
-                compressionBlocks.Add(new CompressionBlock(nextBlock));
+                compressionBlocks.Add(new CompressionBlock(nextBlock, repeatedValues, 512 * i));
             }
             List<byte> compressionBlockLengthBytes = new List<byte>();
             compressionBlockLengthBytes.Add((byte)((compressionBlocks.Count - 1) & 0x3F));
@@ -150,16 +151,16 @@ namespace HamtaroNNQKnJ_ScriptEditor
         {
             public List<CompressionBlockSegment> Segments { get; set; }
 
-            public CompressionBlock(byte[] data)
+            public CompressionBlock(byte[] blockData, Dictionary<byte[], int> repeatedValues, int currentIndex)
             {
                 Segments = new List<CompressionBlockSegment>();
                 List<CompressedDataInstance> instances = new List<CompressedDataInstance>();
-                for (int i = 0; i < data.Length;)
+                for (int i = 0; i < blockData.Length;)
                 {
                     // repeated bytes
-                    if (i < data.Length - 2 && data[i] == data[i + 1] && data[i + 1] == data[i + 2])
+                    if (i < blockData.Length - 2 && blockData[i] == blockData[i + 1] && blockData[i + 1] == blockData[i + 2])
                     {
-                        var bytes = data.Skip(i).TakeWhile(d => d == data[i]);
+                        var bytes = blockData.Skip(i).TakeWhile(d => d == blockData[i]);
                         if (bytes.Count() > 0xFF)
                         {
                             bytes = bytes.Take(0xFF);
@@ -167,12 +168,62 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         instances.Add(new CompressedDataInstance(bytes.ToArray(), CompressionStyle.REPEATED_BYTE));
                         i += bytes.Count();
                     }
-                    // TODO: previous lookup
-                    // uncompressed byte
                     else
                     {
-                        instances.Add(new CompressedDataInstance(new byte[] { data[i] }, CompressionStyle.UNCOMPRESSED));
-                        i++;
+                        // previous lookup, already discovered
+                        byte[] matchingSequence = new byte[0];
+                        byte[] currentSequence = blockData.TakeLast(blockData.Length - i).ToArray();
+                        foreach (byte[] sequence in repeatedValues.Keys)
+                        {
+                            if (i < blockData.Length - 2 // we have room for three bytes
+                                && currentIndex + i - repeatedValues[sequence] <= 0x0FFF // the matching sequence isn't further away than allowed
+                                && sequence.MatchLength(currentSequence) > 3
+                                && sequence.MatchLength(currentSequence) >= matchingSequence.MatchLength(currentSequence)) // the sequence matches more than any other so far
+                            {
+                                matchingSequence = sequence;
+                            }
+                        }
+
+                        if (matchingSequence.Length > 0)
+                        {
+                            byte lookbackLength = (byte)matchingSequence.MatchLength(currentSequence);
+                            ushort lookbackPointer = (ushort)(currentIndex + i - repeatedValues[matchingSequence]);
+                            instances.Add(new CompressedDataInstance(null, CompressionStyle.PREVIOUS_LOOKUP, lookbackLength, lookbackPointer));
+                            i += lookbackLength;
+                        }
+                        else
+                        {
+                            // previous lookup, newly discovered
+                            if (i > 2 && i < blockData.Length - 2)
+                            {
+                                for (int j = 0; j < i - 2; j++)
+                                {
+                                    byte[] sequence = blockData.Skip(j).Take(i - j).ToArray();
+                                    if (sequence.MatchLength(currentSequence) > 3)
+                                    {
+                                        matchingSequence = sequence
+                                            .Take(Math.Min(0x11, sequence.MatchLength(currentSequence)))
+                                            .ToArray();
+                                        repeatedValues.Add(matchingSequence, currentIndex + j);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (matchingSequence.Length > 0)
+                            {
+                                byte lookbackLength = (byte)matchingSequence.MatchLength(currentSequence);
+                                ushort lookbackPointer = (ushort)(currentIndex + i - repeatedValues[matchingSequence]);
+                                instances.Add(new CompressedDataInstance(null, CompressionStyle.PREVIOUS_LOOKUP, lookbackLength, lookbackPointer));
+                                i += lookbackLength;
+                            }
+                            else
+                            {
+                                // uncompressed byte
+                                instances.Add(new CompressedDataInstance(new byte[] { blockData[i] }, CompressionStyle.UNCOMPRESSED));
+                                i++;
+                            }
+                        }
                     }
 
                     if (instances.Count == 4)
@@ -236,7 +287,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             public CompressionStyle CompressionStyle { get; set; }
             public byte[] CompressedData { get; set; }
 
-            public CompressedDataInstance(byte[] uncompressedData, CompressionStyle compressionStyle)
+            public CompressedDataInstance(byte[] uncompressedData, CompressionStyle compressionStyle, byte lookbackLength = 0, ushort lookbackPointer = 0)
             {
                 CompressionStyle = compressionStyle;
 
@@ -255,13 +306,25 @@ namespace HamtaroNNQKnJ_ScriptEditor
                         break;
 
                     case CompressionStyle.PREVIOUS_LOOKUP:
-                        // TODO: implement
+                        if (lookbackLength < 1 || lookbackPointer < 1)
+                        {
+                            throw new ArgumentException($"Both lookup length ({lookbackLength}) and lookup pointer ({lookbackPointer}) must be specified and positive");
+                        }
+                        else if (lookbackPointer > 0x0FFF)
+                        {
+                            throw new ArgumentException($"Lookup pointer (0x{lookbackPointer:X4}) is a 12-bit integer and cannot be greater than 0x0FFF");
+                        }
+                        else if (lookbackLength > 0x11)
+                        {
+                            throw new ArgumentException($"Lookup length (0x{lookbackLength:X2}) is a 4-bit integer and cannot be greater than 0x11");
+                        }
+                        CompressedData = new byte[] { (byte)(lookbackPointer & 0xFF), (byte)(((lookbackPointer & 0xF00) >> 4) | (lookbackLength - 2)) };
                         break;
 
                     case CompressionStyle.REPEATED_BYTE:
                         if (!uncompressedData.All(d => d == uncompressedData[0]))
                         {
-                            throw new ArgumentException("Repeated byte data must all be the same value; received array with differing values.");
+                            throw new ArgumentException("Repeated byte data must all be the same value; received array with differing values");
                         }
                         CompressedData = new byte[] { (byte)(uncompressedData.Length - 2), uncompressedData[0] };
                         break;
@@ -395,7 +458,14 @@ namespace HamtaroNNQKnJ_ScriptEditor
         {
             data = compressedData;
             _pixels = new List<byte>();
-            globalByteIndex = 3;
+            if (data[0] > 0x40)
+            {
+                globalByteIndex = 4;
+            }
+            else
+            {
+                globalByteIndex = 3;
+            }
             bool areBlocksRemaining = true;
 
             while (globalByteIndex + 1 < data.Length && areBlocksRemaining)

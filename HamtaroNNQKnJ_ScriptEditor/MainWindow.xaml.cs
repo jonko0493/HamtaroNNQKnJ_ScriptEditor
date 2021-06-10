@@ -383,14 +383,21 @@ namespace HamtaroNNQKnJ_ScriptEditor
         private void OpenInMessageButton_Click(object sender, RoutedEventArgs e)
         {
             var file = (FileInDirectory)directoryListBox.SelectedItem;
-            _messageFile = MessageFile.ParseFromData(file.Content);
-            _messageFile.FileName = $"{_directoryFile.FileName} at 0x{file.Offset:X8}";
-            messageListBox.ItemsSource = _messageFile.Messages;
+            try
+            {
+                _messageFile = MessageFile.ParseFromData(file.Content);
+                _messageFile.FileName = $"{_directoryFile.FileName} at 0x{file.Offset:X8}";
+                messageListBox.ItemsSource = _messageFile.Messages;
 
-            _openDirectoryFileIndex = directoryListBox.SelectedIndex;
-            reinsertMessageButton.IsEnabled = true;
+                _openDirectoryFileIndex = directoryListBox.SelectedIndex;
+                reinsertMessageButton.IsEnabled = true;
 
-            mainTabControl.SelectedIndex = 0;
+                mainTabControl.SelectedIndex = 0;
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show($"Error while attempting to open message: {exc.Message}");
+            }
         }
 
         private void ExtractBgTilesButton_Click(object sender, RoutedEventArgs e)

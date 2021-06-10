@@ -45,5 +45,22 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
             return bitmapImage;
         }
+
+        public static int MatchLength(this IEnumerable<byte> array, IEnumerable<byte> other)
+        {
+            int matchLength = 0;
+            for (int i = 1; i <= array.Count() && i <= other.Count(); i++)
+            {
+                if (array.Take(i).SequenceEqual(other.Take(i)))
+                {
+                    matchLength = i;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return matchLength;
+        }
     }
 }

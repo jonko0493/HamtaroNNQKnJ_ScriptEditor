@@ -100,6 +100,8 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
         [Test]
         [TestCase(ALPHA_DREAM_LOGO_SPRITE_COMPRESSED_TILES)]
         [TestCase(HAJIMERU_SPRITE_COMPRESSED_TILES)]
+        [TestCase(COMPRESSED_TILE_FILE_80)]
+        [TestCase(COMPRESSED_TILE_FILE_A0)]
         public void YoshiMagicSpriteDecompressionAlgorithTest(string compressedDataFile)
         {
             var compressedData = File.ReadAllBytes(compressedDataFile);
@@ -122,19 +124,7 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
             var originalDecompressedData = File.ReadAllBytes(pixelDataFile);
             var compressedData = GraphicsDriver.CompressSpriteData(originalDecompressedData);
 
-            byte[] newDecompressedData;
-            if (compressedData[0] == 0x40)
-            {
-                // we use the ASM simulator for small files because it's slightly closer to the original subroutine
-                var graphicsDriver = new GraphicsDriver();
-                newDecompressedData = graphicsDriver.DecompressSpriteTilesUsingRefinedAsmSimulator(compressedData);
-            }
-            else
-            {
-                // but I haven't made it work for large files yet lol
-                newDecompressedData = GraphicsDriver.DecompressSpriteData(compressedData);
-            }
-
+            byte[] newDecompressedData = GraphicsDriver.DecompressSpriteData(compressedData);
             Assert.AreEqual(originalDecompressedData, newDecompressedData);
         }
 
