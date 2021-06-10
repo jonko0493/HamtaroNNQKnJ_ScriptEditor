@@ -178,6 +178,14 @@ namespace HamtaroNNQKnJ_ScriptEditor
                     FileType = "Sprite Tile File",
                     SpriteMapFile = (SpriteMapFile)FilesInDirectory[spriteIndex],
                 };
+                try
+                {
+                    ((TileFile)FilesInDirectory[spriteIndex + 1]).PixelData = GraphicsDriver.DecompressSpriteTiles(FilesInDirectory[spriteIndex + 1].Content);
+                }
+                catch (Exception)
+                {
+                    FilesInDirectory[spriteIndex + 1].FileType = "Unknown Tile File";
+                }
             }
         }
     }
@@ -207,9 +215,13 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 {
                     FileType = "Palette File";
                 }
-                else if (_content.FirstOrDefault() == 0x80 || _content.FirstOrDefault() == 0xA0)
+                else if (_content.FirstOrDefault() == 0x80 )
                 {
-                    FileType = "80 or A0 File";
+                    FileType = "80 File";
+                }
+                else if (_content.FirstOrDefault() == 0xA0)
+                {
+                    FileType = "A0 File";
                 }
                 //else if (MessageFile.CanParse(Content))
                 //{

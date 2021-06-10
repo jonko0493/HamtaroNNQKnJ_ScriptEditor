@@ -329,13 +329,19 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 else if (file.GetType() == typeof(TileFile))
                 {
                     var tileFile = (TileFile)file;
-                    if (tileFile.SpriteMapFile is not null)
+                    if (tileFile.Palette is not null)
                     {
                         directoryFileDetailsStackPanel.Children.Add(new Separator());
                         directoryFileDetailsStackPanel.Children.Add(new TextBlock
                         {
-                            Text = $"Associated Palette: {tileFile.SpriteMapFile.AssociatedPaletteIndex} (file {tileFile.SpriteMapFile.AssociatedPalette?.Index ?? -1})"
+                            Text = $"Associated Palette: {tileFile.SpriteMapFile?.AssociatedPaletteIndex ?? -1} (file {tileFile.Palette?.Index ?? -1})"
                         });
+                        if (tileFile.PixelData is not null)
+                        {
+                            directoryFileDetailsStackPanel.Children.Add(new Image { Source = Helpers.GetBitmapImageFromBitmap(tileFile.Get16ColorImage()) });
+                            directoryFileDetailsStackPanel.Children.Add(new Separator());
+                            directoryFileDetailsStackPanel.Children.Add(new Image { Source = Helpers.GetBitmapImageFromBitmap(tileFile.Get256ColorImage()) });
+                        }
                     }
                 }
                 else if (file.GetType() == typeof(PaletteFile))
@@ -442,7 +448,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             }
         }
 
-        private void ParseSpriteIndexFile_Click(object sender, RoutedEventArgs e)
+        private void ParseSpriteIndexFileButton_Click(object sender, RoutedEventArgs e)
         {
             _directoryFile.ParseSpriteIndexFile();
             directoryListBox.Items.Refresh();

@@ -159,9 +159,9 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
             byte blockSizeLength = (byte)(compressedData[index] >> 6);
             int numCompressionBlocks = compressedData[index++] & 0x3F;
-            for (int tempIndex = 1; index <= blockSizeLength; index++)
+            for (int tempIndex = 1; tempIndex <= blockSizeLength; index++)
             {
-                numCompressionBlocks |= compressedData[index] << 6 * tempIndex;
+                numCompressionBlocks |= compressedData[index] << (6 * tempIndex);
                 tempIndex++;
             }
 
@@ -169,10 +169,10 @@ namespace HamtaroNNQKnJ_ScriptEditor
             {
                 index += 2; // skip 16-bit header
                 bool notFinished = true;
-                for (int i = 0; i <= 0xFF && notFinished; i++)
+                for (int i = 0; i < 256 && notFinished; i++)
                 {
                     byte openingByte = compressedData[index++];
-                    for (int j = 0; j <= 3 && notFinished; j++)
+                    for (int j = 0; j < 4 && notFinished; j++)
                     {
                         switch (openingByte & 3)
                         {

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HamtaroNNQKnJ_ScriptEditor"
         mc:Ignorable="d"
-        Title="MainWindow" Height="527" Width="902">
+        Title="MainWindow" Height="582" Width="1049">
     <Grid>
         <TabControl x:Name="mainTabControl" SelectionChanged="MainTabControl_SelectionChanged">
             <TabItem Header="Messages">
@@ -14,7 +14,7 @@
                         <ColumnDefinition Width="99*"/>
                         <ColumnDefinition Width="695*"/>
                     </Grid.ColumnDefinitions>
-                    <ToolBar x:Name="scriptToolBar" HorizontalAlignment="Left" Height="30" VerticalAlignment="Top" Width="896" Grid.ColumnSpan="2">
+                    <ToolBar x:Name="scriptToolBar" HorizontalAlignment="Left" Height="30" VerticalAlignment="Top" Width="1043" Grid.ColumnSpan="2">
                         <Button x:Name="openMessagesFileButton" Content="Open" HorizontalAlignment="Left" Click="OpenMessagesButton_Click" />
                         <Button x:Name="saveMessagesFileButton" Content="Save" HorizontalAlignment="Left" Click="SaveMessagesButton_Click" />
                         <Button x:Name="extractMessagesFileButton" Content="Extract" HorizontalAlignment="Left" Click="ExtractMessagesButton_Click" />
@@ -23,8 +23,8 @@
                             <CheckBox x:Name="showIntroBytesCheckBox" VerticalAlignment="Center" Content="Show Intro Bytes" Click="ShowIntroBytesCheckBox_Click" />
                         </Grid>
                     </ToolBar>
-                    <ListBox x:Name="messageListBox" Margin="0,30,410,0" SelectionChanged="MessageListBox_SelectionChanged" Grid.ColumnSpan="2" />
-                    <StackPanel x:Name="editStackPanel" Margin="290,30,0,0" Grid.Column="1" />
+                    <ListBox x:Name="messageListBox" Margin="0,30,521,0" SelectionChanged="MessageListBox_SelectionChanged" Grid.ColumnSpan="2" />
+                    <StackPanel x:Name="editStackPanel" Margin="408,30,0,0" Grid.Column="1" />
                 </Grid>
             </TabItem>
             <TabItem Header="Directory" Height="20" VerticalAlignment="Top">
@@ -35,7 +35,7 @@
                             <Button x:Name="saveDirectoryFileButton" Content="Save" HorizontalAlignment="Left" Click="SaveDirectoryFileButton_Click" />
                             <Button x:Name="extractDirectoryFileButton" Content="Extract All Files" HorizontalAlignment="Left" Click="ExtractDirectoryFileButton_Click" />
                             <Button x:Name="extractTextFileButton" Content="Extract All Text" HorizontalAlignment="Left" Click="ExtractAllTextFileButton_Click" />
-                            <Button x:Name="parseSpriteIndexFile" Content="Parse Sprite Index File" HorizontalAlignment="Left" Click="ParseSpriteIndexFile_Click" />
+                            <Button x:Name="parseSpriteIndexFileButton" Content="Parse Sprite Index File" HorizontalAlignment="Left" Click="ParseSpriteIndexFileButton_Click" />
                         </ToolBar>
                         <ToolBar x:Name="directorySelectToolBar">
                             <Button x:Name="openInMessageButton" Content="Open in Messages" HorizontalAlignment="Left" IsEnabled="False" Click="OpenInMessageButton_Click" />
@@ -46,7 +46,7 @@
                         </ToolBar>
                     </ToolBarTray>
                     <ListBox x:Name="directoryListBox" Margin="0,30,219,0" SelectionChanged="DirectoryListBox_SelectionChanged" />
-                    <StackPanel Margin="677,30,0,0">
+                    <StackPanel Margin="824,30,0,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock TextAlignment="Right" Margin="0,2,0,0">Global Offset: 0x</TextBlock>
                             <TextBox x:Name="globalOffsetTextBox" Width="100" Text="00000000" TextChanged="GlobalOffsetTextBox_TextChanged" />
