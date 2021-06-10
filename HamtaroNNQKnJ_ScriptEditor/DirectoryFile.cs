@@ -99,7 +99,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
             File.WriteAllBytes(file, GetBytes());
         }
 
-        public void ReinsertFile(int index, MessageFile messageFile)
+        public void ReinsertMessageFile(int index, MessageFile messageFile)
         {
             FilesInDirectory[index].Content = messageFile.GetBytes();
             RecalculatePointers();
@@ -217,14 +217,6 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 else if (GetType() == typeof(PaletteFile))
                 {
                     FileType = "Palette File";
-                }
-                else if (_content.FirstOrDefault() == 0x80 )
-                {
-                    FileType = "80 File";
-                }
-                else if (_content.FirstOrDefault() == 0xA0)
-                {
-                    FileType = "A0 File";
                 }
                 //else if (MessageFile.CanParse(Content))
                 //{

@@ -100,7 +100,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
 
         private void ReinsertMessageButton_Click(object sender, RoutedEventArgs e)
         {
-            _directoryFile.ReinsertFile(_openDirectoryFileIndex, _messageFile);
+            _directoryFile.ReinsertMessageFile(_openDirectoryFileIndex, _messageFile);
             mainTabControl.SelectedIndex = 1;
             directoryListBox.Items.Refresh();
         }

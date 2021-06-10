@@ -41,7 +41,7 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
             DirectoryFile directoryFile = DirectoryFile.ParseFromData(dataOnDisk);
 
             MessageFile scriptFile = MessageFile.ParseFromData(directoryFile.FilesInDirectory[fileIndex].Content);
-            directoryFile.ReinsertFile(fileIndex, scriptFile);
+            directoryFile.ReinsertMessageFile(fileIndex, scriptFile);
 
             byte[] dataInMemory = directoryFile.GetBytes();
 
@@ -65,7 +65,7 @@ namespace HamtaroNNQKnJ_ScriptEditor.Tests
 
                     MessageFile scriptFile = MessageFile.ParseFromData(directoryFile.FilesInDirectory[fileIndex].Content);
                     scriptFile.Messages[messageIndex].Text = scriptFile.Messages[messageIndex].Text.Replace(previousReplacement, replacements[i]);
-                    directoryFile.ReinsertFile(fileIndex, scriptFile);
+                    directoryFile.ReinsertMessageFile(fileIndex, scriptFile);
 
                     MessageFile reParseFile = MessageFile.ParseFromData(directoryFile.FilesInDirectory[fileIndex].Content);
                 }
