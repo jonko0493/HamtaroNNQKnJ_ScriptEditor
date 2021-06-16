@@ -43,7 +43,7 @@
                             <Button x:Name="extractSpriteTilesButton" Content="Extract Sprite Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="ExtractSpriteTilesButton_Click" />
                             <Button x:Name="reinsertSpriteTilesButton" Content="Reinsert Sprite Tiles" HorizontalAlignment="Left" IsEnabled="False" Click="ReinsertSpriteTilesButton_Click" />
                             <Button x:Name="exportPaletteButton" Content="Export Palette" HorizontalAlignment="Left" IsEnabled="False" Click="ExportPaletteButton_Click" />
-
+                            <Button x:Name="parseFontFileButton" Content="Parse Font File" HorizontalAlignment="Left" IsEnabled="False" Click="ParseFontFileButton_Click" />
                         </ToolBar>
                     </ToolBarTray>
                     <ListBox x:Name="directoryListBox" Margin="0,30,439,0" SelectionChanged="DirectoryListBox_SelectionChanged" />

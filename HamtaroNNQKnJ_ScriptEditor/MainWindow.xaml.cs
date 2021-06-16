@@ -294,6 +294,7 @@ namespace HamtaroNNQKnJ_ScriptEditor
                 extractSpriteTilesButton.IsEnabled = true;
                 reinsertSpriteTilesButton.IsEnabled = true;
                 exportPaletteButton.IsEnabled = true;
+                parseFontFileButton.IsEnabled = true;
                 directoryFileDetailsStackPanel.Children.Clear();
 
                 var file = (FileInDirectory)directoryListBox.SelectedItem;
@@ -358,6 +359,15 @@ namespace HamtaroNNQKnJ_ScriptEditor
                     var paletteFile = (PaletteFile)file;
                     directoryFileDetailsStackPanel.Children.Add(new Separator());
                     directoryFileDetailsStackPanel.Children.Add(new Image { Source = Helpers.GetBitmapImageFromBitmap(paletteFile.GetPaletteDisplay()) });
+                }
+                else if (file.GetType() == typeof(FontFile))
+                {
+                    var fontFile = (FontFile)file;
+                    directoryFileDetailsStackPanel.Children.Add(new Separator());
+                    foreach (var image in fontFile.ImageList)
+                    {
+                        directoryFileDetailsStackPanel.Children.Add(new Image { Source = Helpers.GetBitmapImageFromBitmap(image), MaxWidth = image.Width });
+                    }
                 }
             }
             if (e.RemovedItems.Count > 0)
@@ -488,6 +498,13 @@ namespace HamtaroNNQKnJ_ScriptEditor
         private void ParseSpriteIndexFileButton_Click(object sender, RoutedEventArgs e)
         {
             _directoryFile.ParseSpriteIndexFile();
+            directoryListBox.Items.Refresh();
+        }
+
+        private void ParseFontFileButton_Click(object sender, RoutedEventArgs e)
+        {
+            var currentFile = _directoryFile.FilesInDirectory[directoryListBox.SelectedIndex];
+            _directoryFile.FilesInDirectory[directoryListBox.SelectedIndex] = FontFile.FromData(currentFile.Content, currentFile.Offset, currentFile.Notes);
             directoryListBox.Items.Refresh();
         }
     }
