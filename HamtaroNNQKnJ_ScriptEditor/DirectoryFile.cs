@@ -110,13 +110,22 @@ namespace HamtaroNNQKnJ_ScriptEditor
             tileFile.Notes = FilesInDirectory[index].Notes;
             tileFile.FileType = FilesInDirectory[index].FileType;
 
-            TileFile currentFile = null;
             if (FilesInDirectory[index].GetType() == typeof(TileFile))
             {
-                currentFile = (TileFile)FilesInDirectory[index];
+                TileFile currentFile = (TileFile)FilesInDirectory[index];
                 tileFile.SpriteMapFile = currentFile.SpriteMapFile;
                 tileFile.Palette = currentFile.Palette;
                 tileFile.SpriteMapFile.AssociatedTiles = tileFile;
+            }
+
+            if (tileFile.Content.Length % 4 != 0)
+            {
+                List<byte> tileFileContent = tileFile.Content.ToList();
+                for (int i = tileFile.Content.Length % 4; i < 4; i++)
+                {
+                    tileFileContent.Add(0x00);
+                }
+                tileFile.Content = tileFileContent.ToArray();
             }
 
             FilesInDirectory[index] = tileFile;

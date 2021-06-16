@@ -250,7 +250,6 @@ namespace HamtaroNNQKnJ_ScriptEditor
             if (FileStart != FileEnd)
             {
                 data.AddRange(BitConverter.GetBytes(FileStart));
-                data.AddRange(BitConverter.GetBytes(FileEnd));
             }
 
             foreach (int pointer in Pointers)
@@ -260,6 +259,34 @@ namespace HamtaroNNQKnJ_ScriptEditor
             foreach (Message message in Messages)
             {
                 data.AddRange(message.GetBytes());
+            }
+
+            // Trim end of file so we don't get file bloat from editing
+            int lastZeroIndex = data.LastIndexOf(0x00);
+            if (lastZeroIndex > data.FindLastIndex(b => b != 0x00))
+            {
+                int lastZeroSequenceStartIndex = lastZeroIndex;
+                while (data[lastZeroSequenceStartIndex] == 0x00)
+                {
+                    lastZeroSequenceStartIndex--;
+                }
+                if (lastZeroSequenceStartIndex < data.Count - 1)
+                {
+                    data.RemoveRange(lastZeroSequenceStartIndex + 1, data.Count - lastZeroSequenceStartIndex - 1);
+                }
+            }
+
+            if (data.Count % 4 != 0)
+            {
+                for (int i = data.Count % 4; i < 4; i++)
+                {
+                    data.Add(0x00);
+                }
+            }
+
+            if (FileStart != FileEnd)
+            {
+                data.InsertRange(4, BitConverter.GetBytes(FileEnd));
             }
 
             return data.ToArray();
